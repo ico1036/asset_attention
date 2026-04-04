@@ -1,0 +1,83 @@
+{
+  "exp": 63,
+  "timestamp": "2026-04-04T16:59:51.690684",
+  "config": {
+    "model": "DualAttention_d12_noise_minibatch",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.0005,
+    "epochs": 2000,
+    "batch_size": 64,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 1754,
+    "d_model": 12,
+    "n_heads": 1,
+    "patch_size": 5,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "noise_std": 0.1,
+    "train_samples": 620,
+    "attention_type": "dual_spatial_temporal"
+  },
+  "results": {
+    "val_sharpe": 1.897,
+    "test_sharpe": -0.699,
+    "test_mdd": -6.14,
+    "test_ann_return": -0.95,
+    "elapsed_sec": 96.9,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "train_sharpe": 12.2517,
+    "loss_curve": {
+      "train": [
+        -0.5672,
+        -10.3409,
+        -11.4254,
+        -12.2352,
+        -12.3062
+      ],
+      "val": [
+        -0.9986,
+        -0.2931,
+        -0.6092,
+        -1.7442,
+        -1.8244
+      ],
+      "epochs": [
+        0,
+        500,
+        1000,
+        1500,
+        1999
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      40,
+      200
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f GAP: |val-test| = 2.60 > 1.5. Likely overfitting.",
+    "\ud83d\udea8 INSANE test_sharpe=-0.70 outside [-0.5, 5.0]"
+  ]
+}

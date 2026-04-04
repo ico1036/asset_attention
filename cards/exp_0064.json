@@ -1,0 +1,73 @@
+{
+  "exp": 64,
+  "timestamp": "2026-04-04T17:02:59.576236",
+  "config": {
+    "model": "SpatialAttention_d8_heavy_reg",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.0005,
+    "epochs": 2000,
+    "batch_size": 64,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 330,
+    "d_model": 8,
+    "n_heads": 1,
+    "dropout": 0.5,
+    "weight_decay": 0.005,
+    "noise_std": 0.2,
+    "train_samples": 620,
+    "attention_type": "spatial_heavy_reg"
+  },
+  "results": {
+    "val_sharpe": 0.7942,
+    "test_sharpe": 2.1671,
+    "test_mdd": -1.68,
+    "test_ann_return": 1.68,
+    "elapsed_sec": 25.5,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "train_sharpe": 1.3097,
+    "loss_curve": {
+      "train": [
+        -0.6272,
+        -3.172,
+        -3.7759
+      ],
+      "val": [
+        -0.4657,
+        1.4589,
+        1.3423
+      ],
+      "epochs": [
+        0,
+        500,
+        1000
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.3
+    ],
+    "train_time": [
+      30,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": []
+}

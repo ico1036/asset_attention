@@ -1,77 +1,71 @@
 # Insights
 
-_Updated by Dream Phase (Round 3 final) after Exp 55._
+_Updated by Dream Phase (Round 4 final) after Exp 69. 69 experiments across 4 rounds._
 
-## The Definitive Answer: Attention Does NOT Help for This Task
+## The Definitive Answer (Revised from Round 3)
 
-After 55 experiments across 3 rounds, the conclusion is clear:
-**Self-attention (spatial, temporal, or dual) does not improve over a simple MLP for 17-ETF allocation with ~620 clean samples.**
+**Round 1-3 concluded "attention doesn't help" — this was WRONG due to broken training.**
+**Round 4 corrected answer: Attention works as well as MLP; NEITHER beats Equal Weight.**
 
-## Best Model
-**GELU MLP + noise=0.1** (Exp 36/46): val≈1.85, test≈4.2, 692 params
-- Architecture: mean-pool → Linear(10→32) → GELU → Dropout(0.3) → Linear(32→1) → Linear(17→17 cross) → softmax
-- The 17×17 cross-asset linear layer is critical (Exp 24: removing it drops test from 3.94 to 2.08)
-- Gaussian noise (σ=0.1) during training acts as implicit regularization
+## What Went Wrong in Rounds 1-3
 
-## But Is the Alpha Real? NO.
-**Exp 55 revealed the truth**: Seed 42's test_sharpe=4.16 comes from:
-- **40.6% SHY** (short-term treasuries — essentially cash)
-- **12.5% UUP** (US dollar index)
-- Low equity exposure
+All models (MLP and attention alike) trained in 1-2 seconds via full-batch gradient descent on 620 samples. This found random sharp minima that were:
+1. **Seed-dependent**: Seed 42 found a SHY-heavy allocation; other seeds found ~EW
+2. **Not generalizable**: The "alpha" was a cash-overweight strategy specific to 2020-2026
+3. **Misleading for comparison**: Full-batch favored the simpler MLP (fewer params = faster convergence to a specific minimum), making attention look worse
 
-This is a **defensive/cash-heavy portfolio** that happens to excel in the 2020-2026 test period (rate hikes, equity drawdowns, dollar strength). It is NOT a learned cross-asset regime-switching strategy.
+## Round 4 Proper Training Results
 
-Evidence:
-- Different split (60/20/20): test drops from 4.16 to 2.47 (barely above EW=2.27)
-- Other seeds that find similar SHY-heavy allocations (seed 256: 54% SHY) also beat EW
-- Seeds that learn near-uniform weights (7, 99) get exactly EW returns
+With mini-batch training (batch_size=64, LR=5e-4), which adds gradient noise as implicit regularization:
 
-## Round 3 Discoveries
+### Final 3-Way Comparison (Exp 69, 5 seeds each):
+| Model | Params | Val Mean | Test Mean | Test Median |
+|-------|--------|----------|-----------|-------------|
+| Linear | 318 | 1.11 | 1.73 | 1.57 |
+| MLP | 692 | 0.92 | 2.42 | 2.57 |
+| **Spatial Attn+Cross** | 944 | **1.48** | 2.17 | **2.57** |
+| Equal Weight | 0 | — | **2.76** | **2.76** |
 
-### 1. Daily Rebalancing (REBAL_FREQ=1) Is Harmful
-- Single-day return targets are too noisy for 60-day feature windows
-- EW Sharpe drops from 2.76 → 1.36
-- All models perform worse with daily targets
+Key findings:
+- **Attention has the highest val_sharpe** (1.48 vs MLP 0.92) — it generalizes better to unseen validation data
+- **Test medians are identical** for MLP and Attention (both 2.57) — no statistical difference
+- **Equal Weight beats all models on test** — no model architecture finds reliable alpha
+- Attention is **more consistent** across seeds (lower variance)
 
-### 2. Overlapping Samples (stride=1) Are Harmful
-- Creates autocorrelated targets (4/5 days shared between consecutive samples)
-- Model overfits autocorrelation (train_sharpe=7.2) but val/test degrade
-- **Stride must equal target horizon for clean, independent samples**
+### Complexity Ladder (properly trained):
+- Linear (318p): val=1.11, test=1.73 — underfit
+- MLP (692p): val=0.92, test=2.42 — high test variance, seed-dependent
+- Spatial Attn (1042p): val=1.19, test=1.97 — consistent but below EW
+- **Spatial Attn+Cross (944p): val=1.48, test=2.17** — best val, decent test
+- PatchTemporal (1988p): val=0.72, test=2.42 — too many params, underfits val
+- Dual Attention (1754p): val=1.90, test=-0.70 — catastrophic overfitting
 
-### 3. "Data Scarcity" Was a Red Herring
-- 620 samples is sufficient for a 692-param MLP
-- The problem was never sample count — it's that the task is inherently hard
-- No data augmentation trick (overlap, noise, bootstrap) changes the fundamental conclusion
+## Why No Model Beats EW
 
-### 4. Attention Consistently Fails (Now With Noise)
-Even with noise augmentation (the best regularizer from Round 2):
-- Spatial attention: test=0.83 (EW=2.76) ❌
-- PatchTemporal: test=2.38 (EW=2.76) ❌
-- Dual attention: test=1.42 (EW=2.76) ❌
-- MLP-Mixer: test=1.34 (EW=2.76) ❌
-- Attention cross-mixing: test=1.98 (EW=2.76) ❌
+1. **620 independent samples** (weekly rebalancing × 12 years) is fundamentally insufficient
+2. The **signal-to-noise ratio** in multi-asset allocation is very low
+3. With enough regularization, all models converge toward EW-like allocations
+4. Without enough regularization, all models overfit (train_sharpe >> val_sharpe)
+5. The "alpha" region between EW-convergence and overfitting is too narrow and seed-dependent
 
-### 5. SWA Hurts This Task
-Stochastic Weight Averaging averages toward a worse minimum (test: 4.19→1.82).
+## What We Learned About Attention
 
-## Why Attention Fails Here
-1. **Too few independent samples** (620) for attention's O(n²) parameters to learn
-2. **Mean-pooling destroys temporal structure** that attention needs — but the MLP's mean-pool is optimal
-3. **The cross-asset linear layer captures what spatial attention tries to learn**, but with 289 params vs 1000+
-4. **The signal is simple**: overweight safe assets in volatile times. A linear cross layer suffices.
+1. **Attention is NOT worse than MLP** — with proper training it's actually better on val
+2. **Spatial attention captures meaningful cross-asset structure** — higher val than linear
+3. The **linear cross layer** (17×17 = 289 params) is a highly efficient proxy for spatial attention
+4. **Temporal attention (PatchTST) adds too many params** for 620 samples
+5. **Dual attention catastrophically overfits** — too complex for this data regime
 
-## Failed Ideas (Complete List)
-### Data Pipeline
-- REBAL_FREQ=1, stride=1 overlap, stride=1 with non-overlap eval, SWA
+## Confirmed Findings (unchanged from earlier rounds)
+- Daily rebalancing (REBAL_FREQ=1) is harmful — single-day returns too noisy
+- Overlapping samples (stride=1) poison learning via autocorrelated targets
+- Stride must equal target horizon for clean samples
+- SWA hurts — averages toward worse minimum
+- GELU > ReLU for this task
+- Mean-pooling over time is optimal (attention over time doesn't help)
 
-### Architectures (all fail to beat MLP on test)
-- Spatial attention, PatchTemporal, Dual attention, MLP-Mixer, Attention cross-mixing
-- 2-layer MLP, hidden≠32, no cross layer, LayerNorm, attention + FFN blocks
-
-### Training
-- SGD, Sortino loss, turnover penalty, EW blending, SWA, higher dropout/WD
-
-## Final Assessment
-The project answered its core question: **For small-scale ETF allocation (17 assets, 620 samples), attention mechanisms add complexity without benefit.** A simple 692-param MLP with noise augmentation and a cross-asset linear layer is optimal.
-
-The apparent "alpha" (test_sharpe=4.2) is a SHY-overweight strategy that works in the specific test period, not a robust learned strategy. A 60/20/20 split reduces the edge to near-zero.
+## Recommendations
+1. **Use EW** as the production allocation for this 17-ETF universe
+2. If a model is desired: Spatial Attention + Cross layer (best val generalization)
+3. For more data: expand the ETF universe or use shorter rebalancing with different feature design
+4. The real opportunity may be in **feature engineering**, not model architecture

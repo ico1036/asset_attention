@@ -1,0 +1,147 @@
+{
+  "exp": 69,
+  "timestamp": "2026-04-04T17:18:01.166905",
+  "config": {
+    "model": "MultiSeed_3way_comparison",
+    "seeds": [
+      42,
+      7,
+      13,
+      99,
+      256
+    ],
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.0005,
+    "epochs": 1200,
+    "batch_size": 64,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "train_samples": 620
+  },
+  "results": {
+    "val_sharpe": 0.917,
+    "test_sharpe": 2.416,
+    "elapsed_sec": 233.8,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "comparison": {
+      "Linear": {
+        "per_seed": {
+          "42": {
+            "val": 0.724,
+            "test": 2.29
+          },
+          "7": {
+            "val": 1.123,
+            "test": 1.573
+          },
+          "13": {
+            "val": 0.448,
+            "test": 1.512
+          },
+          "99": {
+            "val": 1.816,
+            "test": 1.185
+          },
+          "256": {
+            "val": 1.441,
+            "test": 2.106
+          }
+        },
+        "params": 318,
+        "val_mean": 1.11,
+        "val_med": 1.123,
+        "test_mean": 1.733,
+        "test_med": 1.573
+      },
+      "MLP": {
+        "per_seed": {
+          "42": {
+            "val": -0.112,
+            "test": 2.565
+          },
+          "7": {
+            "val": 1.135,
+            "test": 3.072
+          },
+          "13": {
+            "val": 1.138,
+            "test": 1.964
+          },
+          "99": {
+            "val": 1.016,
+            "test": 2.921
+          },
+          "256": {
+            "val": 1.407,
+            "test": 1.556
+          }
+        },
+        "params": 692,
+        "val_mean": 0.917,
+        "val_med": 1.135,
+        "test_mean": 2.416,
+        "test_med": 2.565
+      },
+      "Attn+Cross": {
+        "per_seed": {
+          "42": {
+            "val": 0.807,
+            "test": 1.608
+          },
+          "7": {
+            "val": 2.431,
+            "test": 1.065
+          },
+          "13": {
+            "val": 0.91,
+            "test": 2.852
+          },
+          "99": {
+            "val": 1.844,
+            "test": 2.77
+          },
+          "256": {
+            "val": 1.398,
+            "test": 2.567
+          }
+        },
+        "params": 944,
+        "val_mean": 1.478,
+        "val_med": 1.398,
+        "test_mean": 2.172,
+        "test_med": 2.567
+      }
+    },
+    "loss_curve": {
+      "train": [],
+      "val": [],
+      "epochs": []
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      60,
+      280
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": []
+}

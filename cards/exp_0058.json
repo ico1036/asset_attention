@@ -1,0 +1,69 @@
+{
+  "exp": 58,
+  "timestamp": "2026-04-04T16:52:59.455518",
+  "config": {
+    "model": "MLPAllocator_GELU_noise_minibatch",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.001,
+    "epochs": 2000,
+    "batch_size": 64,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "hidden_dim": 32,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "activation": "GELU",
+    "noise_std": 0.1,
+    "train_samples": 620
+  },
+  "results": {
+    "val_sharpe": 1.7928,
+    "test_sharpe": 3.5564,
+    "test_mdd": -1.32,
+    "test_ann_return": 2.43,
+    "elapsed_sec": 8.3,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "train_sharpe": 3.3521,
+    "loss_curve": {
+      "train": [
+        -0.697
+      ],
+      "val": [
+        -0.7509
+      ],
+      "epochs": [
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      1.0,
+      2.0
+    ],
+    "train_time": [
+      30,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 8s vs expected ~30s for 692 params \u00d7 620 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 1.76 > 1.5. Likely overfitting."
+  ]
+}

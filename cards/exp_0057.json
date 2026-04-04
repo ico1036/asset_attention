@@ -1,0 +1,74 @@
+{
+  "exp": 57,
+  "timestamp": "2026-04-04T16:51:58.697142",
+  "config": {
+    "model": "MLPAllocator_GELU_noise",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.003,
+    "epochs": 3000,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "hidden_dim": 32,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "activation": "GELU",
+    "noise_std": 0.1,
+    "train_samples": 620
+  },
+  "results": {
+    "val_sharpe": 1.4552,
+    "test_sharpe": 0.7196,
+    "test_mdd": -1.51,
+    "test_ann_return": 0.3,
+    "elapsed_sec": 5.0,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "train_sharpe": 9.9182,
+    "loss_curve": {
+      "train": [
+        -0.6939,
+        -9.5004,
+        -9.9814
+      ],
+      "val": [
+        -0.7367,
+        -1.3909,
+        -0.9618
+      ],
+      "epochs": [
+        0,
+        750,
+        1500
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      1.5,
+      2.0
+    ],
+    "train_time": [
+      30,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 5s vs expected ~30s for 692 params \u00d7 620 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f OVERFIT: train_loss falling but val_loss rising. Early stopping may be too late."
+  ]
+}

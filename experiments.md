@@ -228,6 +228,7 @@
 - Change: Add N(0, 0.1) noise to features during training
 - val_sharpe: 1.85 | test_sharpe: 4.23 | test_mdd: -0.7% | params: 692
 - Verdict: KEEP ⭐ BEST MODEL (beats Exp 1 on both val AND test)
+- **⚠️ Round 4 Note: This result was from full-batch training in 1s. Not properly trained.**
 
 ## Exp 37: GELU MLP + noise sigma=0.2
 - Hypothesis: More noise = more regularization.
@@ -353,6 +354,78 @@
   - Seed 7 (test=2.74): Near-uniform (~6-7% each) ≈ EW
   - Seed 99 (test=2.76): Near-uniform (~6-7% each) ≈ EW
 - **KEY INSIGHT**: Seed 42's "alpha" = defensive cash strategy (SHY+UUP heavy).
-  This is period-specific — works in rate-hike/equity-vol era of 2020-2026 test period.
-  Not generalizable alpha from cross-asset attention.
 - Verdict: KEEP (diagnostic, not a model improvement)
+
+---
+# Round 4: Proper Training (mini-batch, loss curves, guard.py)
+
+**Key change**: All Round 4 experiments use mini-batch training (batch_size=64), lower LR (5e-4), and record loss curves. This fixes the 1-second training problem from Rounds 1-3.
+
+## Exp 57-58: MLP baseline with proper training (mini-batch)
+- Hypothesis: MLP with mini-batch should still work as baseline.
+- val_sharpe: 1.5-1.8 | test_sharpe: 0.7-3.6 | train_time: 5-8s
+- **Loss curve shows massive overfitting**: train_sharpe=3-10 while val=1-2
+- Verdict: DISCARD (established baseline behavior with proper diagnostics)
+
+## Exp 59-60: MLP baseline with adjusted LR and patience
+- val_sharpe: 1.3-1.7 | test_sharpe: 1.8-3.7 | train_time: 21-35s
+- Guard flags: OVERFIT (val_loss rising), GAP > 1.5
+- Verdict: DISCARD (baseline reference)
+
+## Exp 61: Spatial attention with proper training
+- Hypothesis: Attention may work better with proper mini-batch training.
+- val_sharpe: 1.19 | test_sharpe: 1.97 | train_time: 26s | params: 1042
+- Loss curve: train falling, val peaked early then degraded
+- Verdict: DISCARD (below EW, but properly trained this time)
+
+## Exp 62: PatchTemporal with proper training
+- val_sharpe: 0.72 | test_sharpe: 2.42 | train_time: 39s | params: 1988
+- Verdict: DISCARD (classic overfitting, below EW)
+
+## Exp 63: Dual attention with proper training
+- val_sharpe: 1.90 | test_sharpe: -0.70 | train_time: 97s | params: 1754
+- **Catastrophic overfitting**: train_sharpe=12.25, test is negative
+- Verdict: DISCARD 🚨
+
+## Exp 64: Spatial attention with heavy regularization
+- d_model=8, dropout=0.5, noise=0.2, WD=5e-3
+- val_sharpe: 0.79 | test_sharpe: 2.17 | params: 330
+- Less overfitting (train_sharpe=1.31) but weak signal
+- Verdict: DISCARD
+
+## Exp 65: Tiny attention MLP (d_attn=4, replaces linear cross layer)
+- val_sharpe: 1.23 | test_sharpe: 2.19 | params: 538
+- Attention cross-mixing underperforms linear cross even at similar param count
+- Verdict: DISCARD
+
+## Exp 66: ⭐ Multi-seed comparison: MLP vs Spatial Attention (5 seeds each)
+- **KEY FINDING**: With proper training, attention has HIGHER val than MLP!
+- MLP:  val mean=0.92, median=1.13 | test mean=2.39, median=2.57
+- Attn: val mean=1.61, median=1.61 | test mean=2.23, median=2.17
+- Neither beats EW=2.76 on test
+- Verdict: KEEP (diagnostic — overturns Round 1-3 conclusions)
+
+## Exp 67: Spatial attention + bootstrap augmentation (4x)
+- val_sharpe: 0.39 | test_sharpe: 2.75 | train_time: 103s
+- Bootstrap smooths toward EW — doesn't create real new information
+- Verdict: DISCARD
+
+## Exp 68: Spatial attention + linear cross layer
+- val_sharpe: 0.79 | test_sharpe: 2.80 | params: 944
+- Combining attention with MLP's cross layer — test near EW but val low
+- Verdict: DISCARD
+
+## Exp 69: ⭐⭐ Final 3-way comparison: Linear vs MLP vs Attention+Cross (5 seeds each)
+- **DEFINITIVE RESULT** (proper mini-batch training, 5 seeds each):
+
+| Model | Params | Val Mean | Val Med | Test Mean | Test Med |
+|-------|--------|----------|---------|-----------|---------|
+| Linear | 318 | 1.11 | 1.12 | 1.73 | 1.57 |
+| MLP | 692 | 0.92 | 1.14 | 2.42 | 2.57 |
+| Attn+Cross | 944 | **1.48** | **1.40** | 2.17 | 2.57 |
+| Equal Weight | 0 | — | — | **2.76** | **2.76** |
+
+- **Attention has best val, MLP has best test mean, EW beats all on test**
+- Test medians are similar for MLP and Attn+Cross (both 2.57)
+- No model reliably beats EW
+- Verdict: KEEP (final answer)

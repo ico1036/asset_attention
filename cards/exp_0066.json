@@ -1,0 +1,116 @@
+{
+  "exp": 66,
+  "timestamp": "2026-04-04T17:08:23.051636",
+  "config": {
+    "model": "MultiSeed_MLP_vs_SpatialAttention",
+    "seeds": [
+      42,
+      7,
+      13,
+      99,
+      256
+    ],
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.0005,
+    "epochs": 1500,
+    "batch_size": 64,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "train_samples": 620
+  },
+  "results": {
+    "val_sharpe": 0.916,
+    "test_sharpe": 2.3886,
+    "elapsed_sec": 192.6,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "mlp_per_seed": {
+      "42": {
+        "val": -0.112,
+        "test": 2.565,
+        "train": 0.857
+      },
+      "7": {
+        "val": 1.135,
+        "test": 3.072,
+        "train": 0.281
+      },
+      "13": {
+        "val": 1.131,
+        "test": 1.831,
+        "train": 6.591
+      },
+      "99": {
+        "val": 1.016,
+        "test": 2.921,
+        "train": 0.784
+      },
+      "256": {
+        "val": 1.41,
+        "test": 1.554,
+        "train": 5.011
+      }
+    },
+    "attn_per_seed": {
+      "42": {
+        "val": 2.423,
+        "test": 1.656,
+        "train": 1.505
+      },
+      "7": {
+        "val": 1.732,
+        "test": 1.903,
+        "train": 1.582
+      },
+      "13": {
+        "val": 1.413,
+        "test": 2.369,
+        "train": 0.738
+      },
+      "99": {
+        "val": 1.605,
+        "test": 3.028,
+        "train": 3.088
+      },
+      "256": {
+        "val": 0.869,
+        "test": 2.168,
+        "train": 1.491
+      }
+    },
+    "mlp_val_mean": 0.916,
+    "mlp_test_mean": 2.389,
+    "attn_val_mean": 1.608,
+    "attn_test_mean": 2.225,
+    "loss_curve": {
+      "train": [],
+      "val": [],
+      "epochs": []
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      60,
+      250
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": []
+}
