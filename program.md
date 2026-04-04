@@ -70,9 +70,12 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 - Every experiment must be reproducible (set seed).
 - If you need a new library, run `uv add <package>` first. Update pyproject.toml before importing.
 
-## DreamWalk (Harness Integrity Check)
+## DreamWalk (Two Types)
 
-When `philosophy.md`, `program.md`, or `prepare.py` changes:
+### Out-of-Loop DreamWalk (harness changes)
+Triggered when: `philosophy.md`, `program.md`, `guard.py`, or `prepare.py` changes.
+Owner: the human or main session (NOT the experiment agent).
+Purpose: verify the entire workflow still works before sending the agent back in.
 1. Mentally simulate 5 experiments + 1 Dream step-by-step.
 2. At each step, ask: "Can I do this? Is something missing? Will it break?"
 3. **Quantitative sanity check**:
@@ -83,6 +86,15 @@ When `philosophy.md`, `program.md`, or `prepare.py` changes:
 4. **Pre-experiment prediction**: For each simulated experiment, predict expected val_sharpe range, training time, and likely failure modes.
 5. **Post-experiment comparison**: After simulated results, check: "Is this within my prediction? If not, why?"
 6. Fix any issues found before running real experiments.
+
+### In-Loop DreamWalk (during experiments)
+Triggered when: Dream Phase runs (every 10 experiments).
+Owner: the experiment agent.
+Purpose: verify experiments are producing sensible results.
+1. Compare all recent cards' actual results vs their `expected` ranges.
+2. If >50% of experiments fell outside expected ranges → something systemic is wrong. Stop and investigate.
+3. Check: are loss curves healthy? Is the complexity ladder making sense?
+4. Update `insights.md` with pattern corrections.
 
 ## Dream Phase (AutoDream)
 
