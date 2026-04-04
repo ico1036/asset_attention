@@ -32,11 +32,13 @@ uv run prepare.py   # builds tensors from parquet, ~10s
    - val_sharpe: X.XX | val_mdd: X.XX% | params: XXK
    - Verdict: KEEP / DISCARD
    ```
-6. If KEEP: `git add -A && git commit -m "exp N: [description]" && git push`. If DISCARD: revert to best `train.py`.
+6. If KEEP: `git add -A && git commit -m "exp N: [description]" && git push`.
+   If DISCARD: `git checkout HEAD -- train.py` to restore last KEEP version. Card stays (failures are data too).
 7. Repeat from step 1.
 
 ## Rules
 - Only modify `train.py`. Never touch `prepare.py`.
+- `train.py` may read any file in `data/` (parquets, tensors, metadata). This is not "modifying prepare.py".
 - Max 25K parameters. Print param count at start.
 - Metric: `val_sharpe` (higher = better). Secondary: `val_mdd` (lower = better).
 - Device: MPS (Apple Silicon). Use `torch.device("mps")`.

@@ -1,6 +1,7 @@
 {
   "exp": 0,
-  "timestamp": "2026-04-04T14:13:02.286078",
+  "timestamp": "2026-04-04T14:14:54.254866",
+  "verdict": "BASELINE",
   "config": {
     "model": "LinearAllocator",
     "seed": 42,

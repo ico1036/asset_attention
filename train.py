@@ -289,10 +289,21 @@ def main():
         "test_ann_return": round(ann_ret * 100, 2),
         "elapsed_sec": round(elapsed, 1),
     }
-    save_card(config, results)
+    # Load previous best for auto-verdict
+    import json as _json
+    prev_best = None
+    cards_dir = Path(__file__).parent / "cards"
+    for p in sorted(cards_dir.glob("exp_*.json")):
+        with open(p) as f:
+            c = _json.load(f)
+            vs = c.get("results", {}).get("val_sharpe")
+            if vs is not None and c.get("verdict") != "DISCARD":
+                if prev_best is None or vs > prev_best:
+                    prev_best = vs
+    save_card(config, results, best_val_sharpe_so_far=prev_best)
 
 
-def save_card(config, results):
+def save_card(config, results, best_val_sharpe_so_far=None):
     """Save experiment card as JSON for reproducibility."""
     import json, datetime
     cards_dir = Path(__file__).parent / "cards"
@@ -302,9 +313,15 @@ def save_card(config, results):
     existing = list(cards_dir.glob("exp_*.json"))
     n = len(existing)
 
+    # Auto-verdict: compare with previous best
+    verdict = "BASELINE"
+    if best_val_sharpe_so_far is not None:
+        verdict = "KEEP" if results["val_sharpe"] > best_val_sharpe_so_far else "DISCARD"
+
     card = {
         "exp": n,
         "timestamp": datetime.datetime.now().isoformat(),
+        "verdict": verdict,
         "config": config,
         "results": results,
     }
