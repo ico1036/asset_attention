@@ -1,0 +1,115 @@
+{
+  "exp": 74,
+  "timestamp": "2026-04-04T17:46:58.254068",
+  "config": {
+    "model": "PairwiseRanker",
+    "n_params": 193,
+    "train_samples": 620,
+    "n_assets": 17,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ]
+  },
+  "results": {
+    "val_sharpe": 1.1794,
+    "test_sharpe": 2.3812,
+    "elapsed_sec": 10.0,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "Rank_pairwise": {
+        "val_sharpe": 1.0196,
+        "test_sharpe": 2.6459,
+        "val_median": 1.0001,
+        "test_median": 2.6321,
+        "per_seed_val": [
+          1.03,
+          0.999,
+          0.992,
+          1.077,
+          1.0
+        ],
+        "per_seed_test": [
+          2.592,
+          2.69,
+          2.63,
+          2.632,
+          2.686
+        ]
+      },
+      "Rank_listwise": {
+        "val_sharpe": 0.794,
+        "test_sharpe": 2.7385,
+        "val_median": 0.7981,
+        "test_median": 2.7623,
+        "per_seed_val": [
+          0.804,
+          0.798,
+          0.778,
+          0.823,
+          0.767
+        ],
+        "per_seed_test": [
+          2.649,
+          2.762,
+          2.763,
+          2.769,
+          2.75
+        ]
+      },
+      "Rank_combined": {
+        "val_sharpe": 1.1794,
+        "test_sharpe": 2.3812,
+        "per_seed_val": [
+          1.157,
+          1.125,
+          1.122,
+          1.388,
+          1.105
+        ],
+        "per_seed_test": [
+          2.368,
+          2.369,
+          2.407,
+          2.374,
+          2.388
+        ]
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.8,
+      2.0
+    ],
+    "train_time": [
+      30,
+      120
+    ]
+  }
+}

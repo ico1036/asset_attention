@@ -1,0 +1,179 @@
+{
+  "exp": 78,
+  "timestamp": "2026-04-04T17:52:21.235393",
+  "config": {
+    "model": "LW_MinVar_investigation",
+    "n_params": 0,
+    "train_samples": 3287,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.1262,
+    "test_sharpe": 5.055,
+    "elapsed_sec": 1.4,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "LW_w30_fl0.0": {
+        "val_sharpe": 0.4567,
+        "test_sharpe": 4.4389,
+        "max_w": 0.2301,
+        "hhi": 0.1414,
+        "turnover": 0.1208,
+        "ew_val": 0.7638,
+        "ew_test": 2.7627
+      },
+      "LW_w30_fl0.3": {
+        "val_sharpe": 0.4567,
+        "test_sharpe": 4.4389,
+        "max_w": 0.2301,
+        "hhi": 0.1414,
+        "turnover": 0.1208,
+        "ew_val": 0.7638,
+        "ew_test": 2.7627
+      },
+      "LW_w30_fl0.5": {
+        "val_sharpe": 0.4567,
+        "test_sharpe": 4.4389,
+        "max_w": 0.2301,
+        "hhi": 0.1414,
+        "turnover": 0.1208,
+        "ew_val": 0.7638,
+        "ew_test": 2.7627
+      },
+      "LW_w40_fl0.0": {
+        "val_sharpe": 0.6021,
+        "test_sharpe": 4.9373,
+        "max_w": 0.2369,
+        "hhi": 0.149,
+        "turnover": 0.0923,
+        "ew_val": 0.7638,
+        "ew_test": 2.7627
+      },
+      "LW_w40_fl0.3": {
+        "val_sharpe": 0.6021,
+        "test_sharpe": 4.9373,
+        "max_w": 0.2369,
+        "hhi": 0.149,
+        "turnover": 0.0923,
+        "ew_val": 0.7638,
+        "ew_test": 2.7627
+      },
+      "LW_w40_fl0.5": {
+        "val_sharpe": 0.6021,
+        "test_sharpe": 4.9373,
+        "max_w": 0.2369,
+        "hhi": 0.149,
+        "turnover": 0.0923,
+        "ew_val": 0.7638,
+        "ew_test": 2.7627
+      },
+      "LW_w60_fl0.0": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055,
+        "max_w": 0.2453,
+        "hhi": 0.1589,
+        "turnover": 0.0636,
+        "ew_val": 0.7635,
+        "ew_test": 2.7554
+      },
+      "LW_w60_fl0.3": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055,
+        "max_w": 0.2453,
+        "hhi": 0.1589,
+        "turnover": 0.0636,
+        "ew_val": 0.7635,
+        "ew_test": 2.7554
+      },
+      "LW_w60_fl0.5": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055,
+        "max_w": 0.2453,
+        "hhi": 0.1589,
+        "turnover": 0.0636,
+        "ew_val": 0.7635,
+        "ew_test": 2.7554
+      },
+      "LW_w90_fl0.0": {
+        "val_sharpe": 0.5906,
+        "test_sharpe": 5.3758,
+        "max_w": 0.2533,
+        "hhi": 0.1683,
+        "turnover": 0.0468,
+        "ew_val": 0.549,
+        "ew_test": 2.848
+      },
+      "LW_w90_fl0.3": {
+        "val_sharpe": 0.5906,
+        "test_sharpe": 5.3758,
+        "max_w": 0.2533,
+        "hhi": 0.1683,
+        "turnover": 0.0468,
+        "ew_val": 0.549,
+        "ew_test": 2.848
+      },
+      "LW_w90_fl0.5": {
+        "val_sharpe": 0.5906,
+        "test_sharpe": 5.3758,
+        "max_w": 0.2533,
+        "hhi": 0.1683,
+        "turnover": 0.0468,
+        "ew_val": 0.549,
+        "ew_test": 2.848
+      },
+      "LW_w120_fl0.0": {
+        "val_sharpe": 0.6104,
+        "test_sharpe": 5.3418,
+        "max_w": 0.2649,
+        "hhi": 0.1746,
+        "turnover": 0.0374,
+        "ew_val": 0.4751,
+        "ew_test": 2.8647
+      },
+      "LW_w120_fl0.3": {
+        "val_sharpe": 0.6104,
+        "test_sharpe": 5.3418,
+        "max_w": 0.2649,
+        "hhi": 0.1746,
+        "turnover": 0.0374,
+        "ew_val": 0.4751,
+        "ew_test": 2.8647
+      },
+      "LW_w120_fl0.5": {
+        "val_sharpe": 0.6104,
+        "test_sharpe": 5.3418,
+        "max_w": 0.2649,
+        "hhi": 0.1746,
+        "turnover": 0.0374,
+        "ew_val": 0.4751,
+        "ew_test": 2.8647
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      0,
+      10
+    ]
+  }
+}

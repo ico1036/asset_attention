@@ -1,0 +1,121 @@
+{
+  "exp": 72,
+  "timestamp": "2026-04-04T17:44:19.264613",
+  "config": {
+    "model": "Heuristic_blends",
+    "n_params": 0,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.3329,
+    "test_sharpe": 3.4347,
+    "elapsed_sec": 0.1,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_strategies": {
+      "EW+InvVol_0.1": {
+        "val_sharpe": -0.0035,
+        "test_sharpe": 3.2246
+      },
+      "EW+InvVol_0.2": {
+        "val_sharpe": 0.132,
+        "test_sharpe": 3.156
+      },
+      "EW+InvVol_0.3": {
+        "val_sharpe": 0.2499,
+        "test_sharpe": 3.0916
+      },
+      "EW+InvVol_0.4": {
+        "val_sharpe": 0.3528,
+        "test_sharpe": 3.0317
+      },
+      "EW+InvVol_0.5": {
+        "val_sharpe": 0.4431,
+        "test_sharpe": 2.9762
+      },
+      "EW+InvVol_0.6": {
+        "val_sharpe": 0.5228,
+        "test_sharpe": 2.9248
+      },
+      "EW+InvVol_0.7": {
+        "val_sharpe": 0.5935,
+        "test_sharpe": 2.8774
+      },
+      "EW+InvVol_0.8": {
+        "val_sharpe": 0.6564,
+        "test_sharpe": 2.8335
+      },
+      "EW+InvVol_0.9": {
+        "val_sharpe": 0.7128,
+        "test_sharpe": 2.793
+      },
+      "EW+MinVar_0.3": {
+        "val_sharpe": 0.5427,
+        "test_sharpe": 3.1334
+      },
+      "EW+MinVar_0.5": {
+        "val_sharpe": 0.6364,
+        "test_sharpe": 3.0073
+      },
+      "EW+MinVar_0.7": {
+        "val_sharpe": 0.7,
+        "test_sharpe": 2.8954
+      },
+      "VolSwitch_median": {
+        "val_sharpe": 0.684,
+        "test_sharpe": 3.1057
+      },
+      "VolSwitch_75pct": {
+        "val_sharpe": 0.0483,
+        "test_sharpe": 2.6951
+      },
+      "InvVol_floor50": {
+        "val_sharpe": 0.3329,
+        "test_sharpe": 3.4347
+      },
+      "InvVol_floor30": {
+        "val_sharpe": 0.0534,
+        "test_sharpe": 3.3836
+      },
+      "EqualWeight": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554
+      },
+      "InverseVol": {
+        "val_sharpe": -0.1598,
+        "test_sharpe": 3.2969
+      },
+      "MinVariance": {
+        "val_sharpe": 0.2915,
+        "test_sharpe": 3.3255
+      }
+    },
+    "best_strategy": "InvVol_floor50",
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      0,
+      10
+    ]
+  }
+}

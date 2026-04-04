@@ -1,0 +1,88 @@
+{
+  "exp": 77,
+  "timestamp": "2026-04-04T17:51:33.202197",
+  "config": {
+    "model": "RegimeClf+LW+MaxDiv",
+    "n_params": 6,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.1262,
+    "test_sharpe": 5.055,
+    "elapsed_sec": 1.4,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "EW": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554
+      },
+      "InvVol_lb40_fl0.5": {
+        "val_sharpe": 0.3233,
+        "test_sharpe": 3.4554
+      },
+      "LW_MinVar": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055
+      },
+      "MaxDiversification": {
+        "val_sharpe": 0.4038,
+        "test_sharpe": 2.4615
+      },
+      "Ens_EW_IV_LW": {
+        "val_sharpe": 0.6986,
+        "test_sharpe": 3.4552
+      },
+      "Ens_EW_IV_MD": {
+        "val_sharpe": 0.552,
+        "test_sharpe": 2.8658
+      },
+      "Ens_4way": {
+        "val_sharpe": 0.6266,
+        "test_sharpe": 3.1701
+      },
+      "Ens_IV_LW_MD": {
+        "val_sharpe": 0.5283,
+        "test_sharpe": 3.3573
+      },
+      "RegimeClf_s42": {
+        "val_sharpe": 0.6245,
+        "test_sharpe": 3.0047
+      },
+      "RegimeClf_s7": {
+        "val_sharpe": 0.6245,
+        "test_sharpe": 3.0047
+      },
+      "RegimeClf_s13": {
+        "val_sharpe": 0.6245,
+        "test_sharpe": 3.0047
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.3,
+      1.0
+    ],
+    "train_time": [
+      0,
+      60
+    ]
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "exp": 79,
+  "timestamp": "2026-04-04T17:54:31.479918",
+  "config": {
+    "model": "LW_MinVar_robustness+MinVarMLP",
+    "n_params": 620,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.1262,
+    "test_sharpe": 5.055,
+    "elapsed_sec": 36.6,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "LW_70/15/15": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055,
+        "ew_val": 0.7635,
+        "ew_test": 2.7554
+      },
+      "LW_60/20/20": {
+        "val_sharpe": 1.1587,
+        "test_sharpe": 4.268,
+        "ew_val": 0.6933,
+        "ew_test": 2.2686
+      },
+      "LW_80/10/10": {
+        "val_sharpe": 4.2771,
+        "test_sharpe": 4.2406,
+        "ew_val": 1.5344,
+        "ew_test": 3.0246
+      },
+      "LW_50/25/25": {
+        "val_sharpe": 1.8417,
+        "test_sharpe": 2.6874,
+        "ew_val": 1.2999,
+        "ew_test": 1.2284
+      },
+      "MinVarMLP": {
+        "val_sharpe": 0.8135,
+        "test_sharpe": 2.5109,
+        "per_seed": [
+          [
+            0.649,
+            2.758
+          ],
+          [
+            0.771,
+            2.744
+          ],
+          [
+            1.185,
+            1.609
+          ],
+          [
+            0.755,
+            2.697
+          ],
+          [
+            0.707,
+            2.746
+          ]
+        ]
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      5,
+      200
+    ]
+  }
+}

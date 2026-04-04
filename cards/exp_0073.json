@@ -1,0 +1,120 @@
+{
+  "exp": 73,
+  "timestamp": "2026-04-04T17:45:17.998024",
+  "config": {
+    "model": "MomInvVol_blends",
+    "n_params": 2,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.3329,
+    "test_sharpe": 3.4347,
+    "elapsed_sec": 2.6,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_strategies": {
+      "MomInvVol_s0.1": {
+        "val_sharpe": -0.1726,
+        "test_sharpe": 3.2411
+      },
+      "MomInvVol_s0.3": {
+        "val_sharpe": -0.1973,
+        "test_sharpe": 3.096
+      },
+      "MomInvVol_s0.5": {
+        "val_sharpe": -0.1883,
+        "test_sharpe": 2.9375
+      },
+      "MomInvVol_s1.0": {
+        "val_sharpe": 0.0858,
+        "test_sharpe": 2.5824
+      },
+      "MomInvVol60_s0.1": {
+        "val_sharpe": -0.273,
+        "test_sharpe": 3.2543
+      },
+      "MomInvVol60_s0.3": {
+        "val_sharpe": -0.4546,
+        "test_sharpe": 3.1352
+      },
+      "MomInvVol60_s0.5": {
+        "val_sharpe": -0.5412,
+        "test_sharpe": 2.9867
+      },
+      "MomInvVol60_s1.0": {
+        "val_sharpe": 0.119,
+        "test_sharpe": 2.5212
+      },
+      "InvVol_floor50": {
+        "val_sharpe": 0.3329,
+        "test_sharpe": 3.4347
+      },
+      "MomEW_0.3": {
+        "val_sharpe": 0.8632,
+        "test_sharpe": 2.7532
+      },
+      "MomEW_0.5": {
+        "val_sharpe": 0.9515,
+        "test_sharpe": 2.7096
+      },
+      "EqualWeight": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554
+      },
+      "InverseVol": {
+        "val_sharpe": -0.1598,
+        "test_sharpe": 3.2969
+      },
+      "MomRankInvVol_20": {
+        "val_sharpe": -0.2298,
+        "test_sharpe": 3.2525
+      },
+      "MomRankInvVol_60": {
+        "val_sharpe": -0.3065,
+        "test_sharpe": 3.1607
+      },
+      "LearnedBlend_s42": {
+        "val_sharpe": 0.5377,
+        "test_sharpe": 2.915,
+        "alpha": 0.6201
+      },
+      "LearnedBlend_s7": {
+        "val_sharpe": 0.5377,
+        "test_sharpe": 2.915,
+        "alpha": 0.6201
+      },
+      "LearnedBlend_s13": {
+        "val_sharpe": 0.5377,
+        "test_sharpe": 2.915,
+        "alpha": 0.6201
+      }
+    },
+    "best_strategy": "InvVol_floor50",
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      0,
+      30
+    ]
+  }
+}

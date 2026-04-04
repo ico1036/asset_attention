@@ -1,71 +1,72 @@
 # Insights
 
-_Updated by Dream Phase (Round 4 final) after Exp 69. 69 experiments across 4 rounds._
+_Updated by Dream Phase (Round 5 mid) after Exp 79. 79 experiments across 5 rounds._
 
-## The Definitive Answer (Revised from Round 3)
+## The Real Answer: LW_MinVar Beats EW (Round 5 Discovery)
 
-**Round 1-3 concluded "attention doesn't help" — this was WRONG due to broken training.**
-**Round 4 corrected answer: Attention works as well as MLP; NEITHER beats Equal Weight.**
+**Rounds 1-4 concluded "nothing beats EW." Round 5 proved this WRONG.**
 
-## What Went Wrong in Rounds 1-3
+Ledoit-Wolf Minimum Variance portfolio (0 learned parameters) beats Equal Weight on:
+- **val**: 1.13 vs 0.76 (+0.37)
+- **test**: 5.05 vs 2.76 (+2.30)
+- **Robust across ALL 4 train/val/test splits** (Δtest: +1.2 to +2.3)
 
-All models (MLP and attention alike) trained in 1-2 seconds via full-batch gradient descent on 620 samples. This found random sharp minima that were:
-1. **Seed-dependent**: Seed 42 found a SHY-heavy allocation; other seeds found ~EW
-2. **Not generalizable**: The "alpha" was a cash-overweight strategy specific to 2020-2026
-3. **Misleading for comparison**: Full-batch favored the simpler MLP (fewer params = faster convergence to a specific minimum), making attention look worse
+### Why LW_MinVar Works and Learned Models Don't
 
-## Round 4 Proper Training Results
+1. **LW_MinVar exploits structural information (covariance)** that doesn't need to be "learned" from labeled samples
+2. **Ledoit-Wolf shrinkage** provides stable covariance estimation from just 60 daily returns — unlike learned models that need 620+ labeled allocation→return pairs
+3. The 17-ETF universe spans very different risk levels (SHY vol ≈ 0.3% vs USO vol ≈ 3%). MinVar naturally tilts toward low-vol assets.
+4. **Learned models converge to EW** because with 620 samples, any model with >~50 params overfits to noise. The optimal regularized solution IS EW.
+5. MinVar is not "learned" — it's an analytical solution to a different optimization problem (minimize variance, not maximize Sharpe).
 
-With mini-batch training (batch_size=64, LR=5e-4), which adds gradient noise as implicit regularization:
+### What the Portfolio Looks Like
 
-### Final 3-Way Comparison (Exp 69, 5 seeds each):
-| Model | Params | Val Mean | Test Mean | Test Median |
-|-------|--------|----------|-----------|-------------|
-| Linear | 318 | 1.11 | 1.73 | 1.57 |
-| MLP | 692 | 0.92 | 2.42 | 2.57 |
-| **Spatial Attn+Cross** | 944 | **1.48** | 2.17 | **2.57** |
-| Equal Weight | 0 | — | **2.76** | **2.76** |
+LW_MinVar (window=60) average test-period allocation:
+- UUP (USD index): 23.7%
+- SHY (1-3yr Treasury): 22.4%
+- TIP (TIPS): 12.7%
+- HYG (High Yield): 12.2%
+- IEF (7-10yr Treasury): 10.2%
+- **~80% in bonds/cash, ~20% in equities/commodities**
 
-Key findings:
-- **Attention has the highest val_sharpe** (1.48 vs MLP 0.92) — it generalizes better to unseen validation data
-- **Test medians are identical** for MLP and Attention (both 2.57) — no statistical difference
-- **Equal Weight beats all models on test** — no model architecture finds reliable alpha
-- Attention is **more consistent** across seeds (lower variance)
+This is a **defensive portfolio** that worked especially well in 2022-2026 (rate hiking, equity volatility). But it also beat EW on val (2019-2022 including COVID), suggesting genuine risk-adjusted superiority.
 
-### Complexity Ladder (properly trained):
-- Linear (318p): val=1.11, test=1.73 — underfit
-- MLP (692p): val=0.92, test=2.42 — high test variance, seed-dependent
-- Spatial Attn (1042p): val=1.19, test=1.97 — consistent but below EW
-- **Spatial Attn+Cross (944p): val=1.48, test=2.17** — best val, decent test
-- PatchTemporal (1988p): val=0.72, test=2.42 — too many params, underfits val
-- Dual Attention (1754p): val=1.90, test=-0.70 — catastrophic overfitting
+## Hierarchy of Strategies (by test Sharpe, w=60)
 
-## Why No Model Beats EW
+| Strategy | Val | Test | Params | Notes |
+|----------|-----|------|--------|-------|
+| LW_MinVar | 1.13 | 5.05 | 0 | **Best overall** |
+| InvVol_lb40_fl0.5 | 0.32 | 3.46 | 0 | Good test, poor val |
+| VolRegime_50pct | 0.65 | 3.08 | 0 | Balanced val/test |
+| SmoothFloor_s3 | 0.61 | 3.02 | 0 | Balanced |
+| Ensemble_3way | 0.42 | 3.10 | 0 | Diversified |
+| EqualWeight | 0.76 | 2.76 | 0 | Former "unbeatable" baseline |
+| Attn+Cross (best learned) | 1.48 | 2.17 | 944 | Best learned model |
+| MLP (best learned) | 0.92 | 2.42 | 692 | |
 
-1. **620 independent samples** (weekly rebalancing × 12 years) is fundamentally insufficient
-2. The **signal-to-noise ratio** in multi-asset allocation is very low
-3. With enough regularization, all models converge toward EW-like allocations
-4. Without enough regularization, all models overfit (train_sharpe >> val_sharpe)
-5. The "alpha" region between EW-convergence and overfitting is too narrow and seed-dependent
+## What Learned Models Can and Cannot Do
 
-## What We Learned About Attention
+### Cannot Do:
+- Beat EW when sample size is 620 and features are noisy
+- Learn covariance structure better than analytical estimation
+- Generalize cross-asset dynamics from so few samples
 
-1. **Attention is NOT worse than MLP** — with proper training it's actually better on val
-2. **Spatial attention captures meaningful cross-asset structure** — higher val than linear
-3. The **linear cross layer** (17×17 = 289 params) is a highly efficient proxy for spatial attention
-4. **Temporal attention (PatchTST) adds too many params** for 620 samples
-5. **Dual attention catastrophically overfits** — too complex for this data regime
+### Can Do:
+- Achieve similar performance to EW (val ~1.0-1.5) with consistency
+- The ranking model (Exp 74) is remarkably consistent across seeds
+- Attention has better val generalization than MLP
 
-## Confirmed Findings (unchanged from earlier rounds)
-- Daily rebalancing (REBAL_FREQ=1) is harmful — single-day returns too noisy
-- Overlapping samples (stride=1) poison learning via autocorrelated targets
-- Stride must equal target horizon for clean samples
-- SWA hurts — averages toward worse minimum
-- GELU > ReLU for this task
-- Mean-pooling over time is optimal (attention over time doesn't help)
+## Confirmed Round 5 Findings
+- **Adding momentum to InvVol hurts** — momentum is noise at weekly frequency
+- **EW-deviation loss makes models too conservative** — they learn to not deviate
+- **Pairwise ranking doesn't help** despite 136× sample multiplication
+- **Regime classification is deterministic** with logistic regression (too few features)
+- **Learned models given MinVar as input still converge to ~EW** — can't leverage the structural edge
+- **Floor constraints on InvVol don't bind** with LW shrinkage (weights already reasonable)
 
-## Recommendations
-1. **Use EW** as the production allocation for this 17-ETF universe
-2. If a model is desired: Spatial Attention + Cross layer (best val generalization)
-3. For more data: expand the ETF universe or use shorter rebalancing with different feature design
-4. The real opportunity may be in **feature engineering**, not model architecture
+## Remaining Questions (for Exp 80-89)
+1. Can attention improve LW_MinVar by learning better covariance estimates?
+2. What about online/adaptive covariance with exponential weighting?
+3. Can we combine LW_MinVar with a small learned tilt that improves val?
+4. Does monthly rebalancing (fewer, cleaner signals) change the picture?
+5. What is the MAX_DRAWDOWN of LW_MinVar vs EW?

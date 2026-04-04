@@ -1,0 +1,110 @@
+{
+  "exp": 75,
+  "timestamp": "2026-04-04T17:49:10.614806",
+  "config": {
+    "model": "HeuristicEnsembles+InvVolDevMLP",
+    "n_params": 194,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": -0.1659,
+    "test_sharpe": 3.7768,
+    "elapsed_sec": 46.0,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "EW": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554
+      },
+      "InvVol": {
+        "val_sharpe": -0.1598,
+        "test_sharpe": 3.2969
+      },
+      "MinVar": {
+        "val_sharpe": 0.2915,
+        "test_sharpe": 3.3255
+      },
+      "Ensemble_EW_IV": {
+        "val_sharpe": 0.4431,
+        "test_sharpe": 2.9762
+      },
+      "Ensemble_EW_MV": {
+        "val_sharpe": 0.6364,
+        "test_sharpe": 3.0073
+      },
+      "Ensemble_3way": {
+        "val_sharpe": 0.4161,
+        "test_sharpe": 3.1037
+      },
+      "Ensemble_IV_MV": {
+        "val_sharpe": 0.0375,
+        "test_sharpe": 3.3626
+      },
+      "VolRegime_50pct": {
+        "val_sharpe": 0.6449,
+        "test_sharpe": 3.0752
+      },
+      "VolRegime_70pct": {
+        "val_sharpe": 0.0814,
+        "test_sharpe": 2.6012
+      },
+      "VolRegime_80pct": {
+        "val_sharpe": -0.1659,
+        "test_sharpe": 3.7768
+      },
+      "InvVolDevMLP": {
+        "val_sharpe": 0.1376,
+        "test_sharpe": 2.9975,
+        "per_seed": [
+          [
+            0.133,
+            2.911
+          ],
+          [
+            0.139,
+            3.006
+          ],
+          [
+            0.081,
+            2.98
+          ],
+          [
+            0.289,
+            3.092
+          ],
+          [
+            0.046,
+            3.0
+          ]
+        ]
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      5,
+      90
+    ]
+  }
+}

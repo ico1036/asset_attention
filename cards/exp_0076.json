@@ -1,0 +1,132 @@
+{
+  "exp": 76,
+  "timestamp": "2026-04-04T17:50:08.380491",
+  "config": {
+    "model": "SmoothVolBlend",
+    "n_params": 0,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.3233,
+    "test_sharpe": 3.4554,
+    "elapsed_sec": 0.0,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "SmoothBlend_s2.0": {
+        "val_sharpe": 0.4637,
+        "test_sharpe": 2.9845
+      },
+      "SmoothBlend_s3.0": {
+        "val_sharpe": 0.4711,
+        "test_sharpe": 2.9769
+      },
+      "SmoothBlend_s5.0": {
+        "val_sharpe": 0.4818,
+        "test_sharpe": 2.9493
+      },
+      "SmoothBlend_s8.0": {
+        "val_sharpe": 0.4949,
+        "test_sharpe": 2.9134
+      },
+      "SmoothBlend_s10.0": {
+        "val_sharpe": 0.5034,
+        "test_sharpe": 2.9033
+      },
+      "InvVol_lb10": {
+        "val_sharpe": -0.0749,
+        "test_sharpe": 3.2828
+      },
+      "InvVol_lb20": {
+        "val_sharpe": -0.0598,
+        "test_sharpe": 3.3269
+      },
+      "InvVol_lb40": {
+        "val_sharpe": -0.1247,
+        "test_sharpe": 3.3631
+      },
+      "InvVol_lb60": {
+        "val_sharpe": -0.1598,
+        "test_sharpe": 3.2969
+      },
+      "InvVol_lb20_fl0.3": {
+        "val_sharpe": 0.1419,
+        "test_sharpe": 3.4404
+      },
+      "InvVol_lb20_fl0.5": {
+        "val_sharpe": 0.3519,
+        "test_sharpe": 3.4083
+      },
+      "InvVol_lb20_fl0.7": {
+        "val_sharpe": 0.4836,
+        "test_sharpe": 3.2304
+      },
+      "InvVol_lb40_fl0.3": {
+        "val_sharpe": 0.0788,
+        "test_sharpe": 3.458
+      },
+      "InvVol_lb40_fl0.5": {
+        "val_sharpe": 0.3233,
+        "test_sharpe": 3.4554
+      },
+      "InvVol_lb40_fl0.7": {
+        "val_sharpe": 0.464,
+        "test_sharpe": 3.2448
+      },
+      "InvVol_lb60_fl0.3": {
+        "val_sharpe": 0.0534,
+        "test_sharpe": 3.3836
+      },
+      "InvVol_lb60_fl0.5": {
+        "val_sharpe": 0.3329,
+        "test_sharpe": 3.4347
+      },
+      "InvVol_lb60_fl0.7": {
+        "val_sharpe": 0.4696,
+        "test_sharpe": 3.2345
+      },
+      "EW": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554
+      },
+      "InvVol_full": {
+        "val_sharpe": -0.1598,
+        "test_sharpe": 3.2969
+      },
+      "SmoothFloor_s3.0": {
+        "val_sharpe": 0.6102,
+        "test_sharpe": 3.0234
+      },
+      "SmoothFloor_s5.0": {
+        "val_sharpe": 0.6084,
+        "test_sharpe": 3.002
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.3,
+      1.0
+    ],
+    "train_time": [
+      0,
+      5
+    ]
+  }
+}

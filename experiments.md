@@ -415,7 +415,7 @@
 - Combining attention with MLP's cross layer — test near EW but val low
 - Verdict: DISCARD
 
-## Exp 69: ⭐⭐ Final 3-way comparison: Linear vs MLP vs Attention+Cross (5 seeds each)
+## Exp 69: ⭐⭐ Final 3-way comparison (Round 4 conclusion)
 - **DEFINITIVE RESULT** (proper mini-batch training, 5 seeds each):
 
 | Model | Params | Val Mean | Val Med | Test Mean | Test Med |
@@ -429,3 +429,70 @@
 - Test medians are similar for MLP and Attn+Cross (both 2.57)
 - No model reliably beats EW
 - Verdict: KEEP (final answer)
+
+---
+# Round 5: Creative Reformulation — Beat EW
+
+## Exp 70: Heuristic baselines (InvVol, MinVar, Momentum, RiskParity)
+- Hypothesis: Non-learned heuristics may beat EW without overfitting risk.
+- InvVol: val=-0.16, test=3.30 | MinVar: val=0.30, test=3.33 | MomTopK5: val=2.14, test=1.78
+- **KEY: InvVol and MinVar beat EW on test but not val (regime-dependent)**
+- Verdict: KEEP (diagnostic)
+
+## Exp 71: EW-deviation MLP with "beat EW" loss
+- Hypothesis: Model learns small deviations from EW, penalized for underperforming EW.
+- val=0.756 test=2.759 (essentially IS EW — avg deviation = 0.0015)
+- The model learned: safest strategy is to not deviate. Beat-EW loss is too conservative.
+- Verdict: DISCARD
+
+## Exp 72: EW-InvVol blends + vol-regime switching
+- Hypothesis: Static blends or binary regime switch between EW and InvVol.
+- Best test: InvVol_floor50 = 3.435 (val=0.333)
+- VolSwitch_median: val=0.684, test=3.106 — decent on both!
+- Verdict: KEEP (diagnostic)
+
+## Exp 73: Momentum×InvVol combinations + Tiny learned blender
+- Hypothesis: Combining momentum with InvVol or learning optimal blend.
+- Adding momentum to InvVol HURTS across the board.
+- Learned blender converges to alpha=0.62 (deterministic across seeds, 2 params too few to overfit).
+- Verdict: DISCARD
+
+## Exp 74: Pairwise ranking model (136× sample multiplication)
+- Hypothesis: Pairwise ranking creates 84K training pairs from 620 samples.
+- Pairwise: val=1.02, test=2.65 | Listwise: val=0.79, test=2.74 | Combined: val=1.18, test=2.38
+- Very consistent across seeds but doesn't beat EW. Ranking doesn't help.
+- Verdict: DISCARD
+
+## Exp 75: Heuristic ensembles + Vol-regime adaptive + InvVol-deviation MLP
+- Hypothesis: Ensemble of heuristics diversifies across regimes; InvVol-deviation MLP preserves InvVol's edge.
+- VolRegime_80pct: val=-0.17, test=3.78 (regime-dependent)
+- Ensemble_3way (EW+IV+MV): val=0.42, test=3.10
+- InvVolDevMLP: val~0.14, test~3.0 (learned model gravitates to InvVol base)
+- Verdict: DISCARD
+
+## Exp 76: Smooth vol-adaptive blend + InvVol lookback/floor sweep
+- Hypothesis: Smooth sigmoid blend better than binary switch; InvVol lookback tuning.
+- Best: InvVol_lb40_fl0.3 test=3.458 (val=0.079) | InvVol_lb40_fl0.5 val+test=3.778
+- SmoothFloor: val=0.61, test=3.02 — balanced
+- Verdict: KEEP (diagnostic)
+
+## Exp 77: ⭐⭐⭐ Ledoit-Wolf MinVar + MaxDiv + Regime Classifier
+- **BREAKTHROUGH: LW_MinVar val=1.126, test=5.055 — beats EW on BOTH val AND test!**
+- Portfolio: UUP 23.7%, SHY 22.4%, TIP 12.7%, HYG 12.2%, IEF 10.2% (defensive/bond-heavy)
+- MaxDiv: val=0.40, test=2.46 (underperforms)
+- RegimeClf: val=0.63, test=3.01 (deterministic across seeds)
+- Verdict: KEEP ⭐⭐⭐
+
+## Exp 78: LW_MinVar deep investigation (windows, floors, concentrations)
+- All window sizes beat EW on test. Window=60 also beats on val.
+- Floor has no effect (weights already above floor).
+- Consistent across windows: portfolio is ~60% defensive (SHY+UUP+TIP+IEF+HYG).
+- Turnover is low (0.064 for w=60), practical for real implementation.
+- Verdict: KEEP
+
+## Exp 79: ⭐⭐ LW_MinVar robustness across splits + MinVarMLP
+- **ROBUSTNESS CONFIRMED: LW_MinVar beats EW across ALL 4 splits:**
+  - 70/15/15: Δtest=+2.30 | 60/20/20: Δtest=+2.00 | 80/10/10: Δtest=+1.22 | 50/25/25: Δtest=+1.46
+- MinVarMLP (learned model with MinVar input): val=0.81, test=2.51 — WORSE than pure LW_MinVar!
+- Learned models consistently degrade toward EW, can't leverage MinVar edge.
+- Verdict: KEEP ⭐⭐

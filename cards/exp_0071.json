@@ -1,0 +1,73 @@
+{
+  "exp": 71,
+  "timestamp": "2026-04-04T17:43:20.400670",
+  "config": {
+    "model": "EWDeviationMLP",
+    "n_params": 692,
+    "seeds": [
+      42,
+      7,
+      13,
+      99,
+      256
+    ],
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.0005,
+    "epochs": 1500,
+    "batch_size": 64,
+    "max_deviation": 0.3,
+    "train_samples": 620,
+    "n_assets": 17,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "loss_type": "beat_ew_loss(alpha=0.7)"
+  },
+  "results": {
+    "val_sharpe": 0.7555,
+    "test_sharpe": 2.7589,
+    "val_median": 0.7563,
+    "test_median": 2.7579,
+    "per_seed_val": [
+      0.756,
+      0.732,
+      0.78,
+      0.753,
+      0.756
+    ],
+    "per_seed_test": [
+      2.753,
+      2.752,
+      2.769,
+      2.758,
+      2.763
+    ],
+    "elapsed_sec": 72.6,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "loss_curve": {
+      "train": [],
+      "val": []
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      1.0,
+      2.0
+    ],
+    "train_time": [
+      30,
+      120
+    ]
+  }
+}
