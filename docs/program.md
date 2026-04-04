@@ -76,6 +76,17 @@ from prepare import (
 3. `git add -A && git commit -m "round N complete" && git push`
 4. `sessions_send(sessionKey="main", message="Round complete. Spawn next.")`
 
+## Critic Review (after every 5 experiments)
+After every 5 experiments, the main session spawns a **Critic agent** (separate session) that:
+1. Reads `docs/critic.md` for its persona and review process.
+2. Reviews the last 5 experiment cards + current `train.py`.
+3. Writes a CIO Review verdict to `docs/reviews/review_N.md`.
+4. If FAIL: Explorer must address all issues before continuing.
+5. If REVISE: Explorer incorporates feedback in next experiments.
+6. If PASS: Continue.
+
+The Critic is a different agent with fresh eyes. It does NOT have access to the Explorer's internal reasoning — only to cards, code, and docs.
+
 ## Self-Diagnosis (before every experiment)
 - Read `docs/insights.md` first.
 - If val-test gap > 1.5: overfitting → reduce model or add regularization.
