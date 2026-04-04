@@ -1,0 +1,28 @@
+{
+  "exp": 33,
+  "timestamp": "2026-04-04T15:23:19.114910",
+  "config": {
+    "model": "LinearMom",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.003,
+    "n_features": 3,
+    "features": [
+      "mom20",
+      "mom5",
+      "mom60"
+    ],
+    "n_assets": 17,
+    "n_params": 311,
+    "weight_decay": 0.001
+  },
+  "results": {
+    "val_sharpe": 0.7486,
+    "test_sharpe": 2.6237,
+    "test_mdd": -1.72,
+    "test_ann_return": 2.12,
+    "elapsed_sec": 0.9,
+    "benchmark_equal_weight_sharpe": 2.7554
+  }
+}

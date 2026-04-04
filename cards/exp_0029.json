@@ -1,0 +1,38 @@
+{
+  "exp": 29,
+  "timestamp": "2026-04-04T15:21:38.130749",
+  "config": {
+    "model": "MLPAllocator_EW_blend",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.003,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "hidden_dim": 32,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "alpha": 0.5
+  },
+  "results": {
+    "val_sharpe": 0.9736,
+    "test_sharpe": 2.9567,
+    "test_mdd": -1.58,
+    "test_ann_return": 2.43,
+    "elapsed_sec": 1.1,
+    "benchmark_equal_weight_sharpe": 2.7554
+  }
+}

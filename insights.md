@@ -1,57 +1,58 @@
 # Insights
 
-_Updated by Dream Phase 2 after Exp 20._
+_Updated by Dream Phase 3 (Round 2) after Exp 33._
 
-## Patterns
+## Round 2 Key Finding: Exp 1 MLP is Hard to Beat
 
-### Architecture Rankings (by best val_sharpe)
-1. **3-seed ensemble of PatchTemporal** — val=2.73 (Exp 17, but test=0.22 ⚠️)
-2. **3-seed ensemble of PatchTemporal** — val=2.57 (Exp 15, test=0.83)
-3. **2-layer PatchTemporal shared QKV** — val=2.51 (Exp 20, test=1.06)
-4. **PatchTemporal causal, single** — val=2.36 (Exp 13, test=1.44)
-5. **PatchTemporal vanilla** — val=2.36 (Exp 7, test=1.44)
-6. **Spatial attention only** — val=1.77 (Exp 4, test=1.33)
-7. **MLP** — val=1.18 (Exp 1, test=3.94)
-8. **Linear** — val=0.84 (Exp 0, test=2.56)
+### Architecture Rankings (by test_sharpe - EW)
+1. **MLP hidden=32 + cross** (Exp 1/21) — gap=+1.18, best single model
+2. **MLP REBAL_FREQ=10** (Exp 28) — gap=+1.51 but only 67 test samples (noisy)
+3. **MLP 2-layer** (Exp 32) — gap=+0.36, more params but decent
+4. **MLP 5-seed ensemble** (Exp 22) — gap=+0.23, averaging dilutes the best seed
+5. **MLP+EW blend α=0.5** (Exp 29) — gap=+0.20, shrinkage toward EW works
+6. **MLP+EW blend α=0.3** (Exp 30) — gap=+0.11
 
-### Key Learnings
-1. **Temporal > Spatial > Linear** — Clear hierarchy for val_sharpe
-2. **5-day patches optimal** — 3-day (Exp 11) and 10-day (Exp 10) both worse
-3. **Last-patch pooling > mean pooling** — Exp 9 confirmed
-4. **Ensembles boost val but hurt test** — Strong sign of val overfitting
-5. **Seed sensitivity is HIGH** — Val ranges from 0.71 to 2.92 across seeds
-6. **Val/test divergence worsens with complexity** — Linear (test>val), attention (val>test)
-7. **Cross-asset layers hurt** — Both spatial attention (Exp 8) and linear mix (Exp 18) overfit
-8. **Loss function doesn't matter much** — Sortino ≈ Sharpe (Exp 12)
-9. **Optimizer doesn't matter much** — SGD ≈ Adam for val (Exp 19)
-10. **Causal masking is neutral** — Doesn't help or hurt (Exp 13)
+### Round 2 Learnings
+1. **Cross-asset layer is critical** — Exp 24 (no cross) lost 1.85 in test_sharpe vs Exp 21
+2. **hidden=32 is the sweet spot** — hidden=16 (Exp 25) much worse
+3. **More regularization hurts** — dropout=0.5/wd=5e-3 (Exp 23) collapsed to EW-level
+4. **Window averaging > last day** — Mean pool outperforms last-day (Exp 31)
+5. **Window=60 is optimal** — Window=30 (Exp 27) converged to EW
+6. **Exponential weighting doesn't help** — Exp 26 ≈ EW
+7. **Momentum alone insufficient** — Exp 33 below EW, all 10 features needed
+8. **MLP ensembling dilutes alpha** — Unlike attention, MLP seed variance is low-ish; best seed >> average
+9. **Exp 1 config is already near-optimal** — 692 params, hidden=32, dropout=0.3, wd=1e-3
 
-### Core Problem
-With only 133 val samples, val_sharpe is noisy. The equal weight benchmark (2.76) may be hard to
-beat robustly because:
-- Equal weight is diversification-optimal for uncorrelated assets
-- Any learned allocation concentrates, increasing variance
-- 133 samples is not enough to reliably estimate Sharpe differences
+### The Exp 1 Mystery
+- val=1.18 but test=3.94 (inverted gap). Why?
+- The test period (2023-2026) might favor the specific weight pattern seed=42 learns
+- This could be partly luck. Need to verify with REBAL_FREQ sensitivity.
 
-### Best Honest Single Model
-Exp 13 (PatchTemporal, causal, val=2.36) is the best **single model** — reproducible,
-no seed-picking, reasonable val/test ratio.
+### Round 1 Learnings (preserved)
+1. **Temporal > Spatial > Linear** — for val_sharpe
+2. **5-day patches optimal** for attention models
+3. **Attention overfits badly** — val↑ but test↓ as complexity increases
+4. **Cross-asset attention/mixing always hurts** — Exp 8, 18
+5. **Val (133 samples) is very noisy** — can't reliably distinguish Sharpe differences
 
 ## Failed Ideas (Don't Retry)
-- Bigger d_model (>16) → overfits
-- 10-day patches → loses granularity
-- 3-day patches → too noisy
-- Feature dropping → hurts
-- Turnover penalty → hurts
-- Cross-asset mixing → hurts
-- Longer windows (120d) → hurts
-- Rich temporal pooling (last+mean+std) → hurts
-- SGD optimizer → no improvement
+### Round 1
+- Bigger d_model (>16), 10-day patches, 3-day patches
+- Feature dropping, turnover penalty, cross-asset mixing
+- Longer windows (120d), rich temporal pooling
+- SGD optimizer, Sortino loss
 
-## Untested Ideas for Future
-- RoPE position encoding (instead of learned)
-- SwiGLU activation in FFN
-- Learnable patch aggregation (weighted avg not fixed last)
-- Pre-training on broader stock universe
-- Rolling window validation (Phase 2 from philosophy.md)
-- Data augmentation (noise injection, temporal jitter)
+### Round 2
+- Smaller hidden dim (16), higher dropout (0.5), stronger weight decay (5e-3)
+- EW blending (dilutes alpha), momentum-only features
+- Exponential window weighting, last-day only
+- Window=30 (too short)
+
+## Ideas for Remaining Experiments
+- Learnable temperature for softmax (already there, but fixed init?)
+- Different LR schedules (warm restart)
+- GELU instead of ReLU
+- Batch normalization instead of dropout
+- Input noise augmentation
+- Different seeds systematically to understand variance
+- REBAL_FREQ=10 with more samples (window=30)
