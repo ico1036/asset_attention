@@ -1,0 +1,154 @@
+{
+  "exp": 1,
+  "timestamp": "2026-04-04T22:04:22.910760",
+  "config": {
+    "model": "CrossAttentionAllocator",
+    "n_params": 217,
+    "n_assets": 4,
+    "tickers": [
+      "SPY",
+      "TLT",
+      "GLD",
+      "SHY"
+    ],
+    "d_model": 8,
+    "n_heads": 1,
+    "n_patches": 12,
+    "architecture": "learned asset queries \u2192 cross-attn over time patches \u2192 scores \u2192 softmax",
+    "has_attention": true,
+    "preserves_time": true,
+    "regime_signal": {
+      "avg_entropy": 2.2800145149230957,
+      "entropy_std": 0.05866745486855507,
+      "crisis_entropy": 2.2405301897066563,
+      "calm_entropy": 2.3265401140764475,
+      "diff": -0.08600992436979116,
+      "crisis_weights": [
+        0.25617915391921997,
+        0.2597382068634033,
+        0.2323809117078781,
+        0.251701682806015
+      ],
+      "calm_weights": [
+        0.2567458152770996,
+        0.25105607509613037,
+        0.24298419058322906,
+        0.24921390414237976
+      ]
+    }
+  },
+  "results": {
+    "val_sharpe": 0.8832520176855919,
+    "test_sharpe": 0.829749132096564,
+    "ann_return_pct": 5.7609930576290935,
+    "ann_vol_pct": 6.94305403257553,
+    "max_drawdown_pct": -41.46193265914917,
+    "turnover": 0.034350864589214325,
+    "yearly": {
+      "2010": {
+        "val_sharpe": 0.10634781076725155,
+        "test_sharpe": 1.8946890955217164,
+        "n_test": 252
+      },
+      "2011": {
+        "val_sharpe": 1.5847188724019654,
+        "test_sharpe": 1.6002018770386937,
+        "n_test": 252
+      },
+      "2012": {
+        "val_sharpe": 1.1147723509062035,
+        "test_sharpe": 1.0228669156854486,
+        "n_test": 250
+      },
+      "2013": {
+        "val_sharpe": 1.1858021323088037,
+        "test_sharpe": -0.6621229224304047,
+        "n_test": 252
+      },
+      "2014": {
+        "val_sharpe": -0.7255611869680086,
+        "test_sharpe": 1.8596352431775685,
+        "n_test": 252
+      },
+      "2015": {
+        "val_sharpe": 1.7447969842935722,
+        "test_sharpe": -0.3910282508012931,
+        "n_test": 252
+      },
+      "2016": {
+        "val_sharpe": -0.2979691478959692,
+        "test_sharpe": 0.6992573323226949,
+        "n_test": 252
+      },
+      "2017": {
+        "val_sharpe": 0.6237223005687531,
+        "test_sharpe": 2.4311610242303883,
+        "n_test": 251
+      },
+      "2018": {
+        "val_sharpe": 2.5243256357177613,
+        "test_sharpe": -0.3627454873198736,
+        "n_test": 251
+      },
+      "2019": {
+        "val_sharpe": -0.012941222169717308,
+        "test_sharpe": 3.0099271678785184,
+        "n_test": 252
+      },
+      "2020": {
+        "val_sharpe": 2.6249349091916296,
+        "test_sharpe": 1.371015136016419,
+        "n_test": 253
+      },
+      "2021": {
+        "val_sharpe": 1.3343911327497546,
+        "test_sharpe": 0.6207655143998119,
+        "n_test": 252
+      },
+      "2022": {
+        "val_sharpe": 0.4833028349593322,
+        "test_sharpe": -1.5090655454426807,
+        "n_test": 251
+      },
+      "2023": {
+        "val_sharpe": -0.8036278069910326,
+        "test_sharpe": 1.3305144454461626,
+        "n_test": 250
+      },
+      "2024": {
+        "val_sharpe": 0.5390440247521014,
+        "test_sharpe": 0.6537802497421583,
+        "n_test": 252
+      },
+      "2025": {
+        "val_sharpe": 1.094316281214067,
+        "test_sharpe": 2.2074441549619883,
+        "n_test": 250
+      },
+      "2026": {
+        "val_sharpe": 1.8949083948485954,
+        "test_sharpe": 0.5391359583425824,
+        "n_test": 62
+      }
+    },
+    "elapsed_sec": 6.3,
+    "loss_curve": {
+      "train": [],
+      "val": []
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      -1.0,
+      1.5
+    ],
+    "train_time": [
+      10,
+      120
+    ]
+  },
+  "verdict": "KEEP",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 6s vs expected ~30s for 217 params \u00d7 620 samples. Undertrained or data too small."
+  ]
+}

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-Exp 114: Amplify Regime Signal → Portfolio Variation
-Hypothesis: Exp 113 achieved regime-dependent attention (crisis entropy 0.686 vs calm 0.863)
-            but portfolio weights barely vary (std ~1%). The attention signal gets smoothed
-            by the output layer. Fix: use attention output DIRECTLY as portfolio logits via
-            a cross-attention mechanism where learned asset queries attend to time patches.
-            This creates a direct path: time attention → per-asset score → softmax weights.
-Expected: val_sharpe [-1.0, 1.5], portfolio weight std > 0.03, regime signal maintained
-Change vs Exp 113: Replace self-attention + mean pool + linear out with cross-attention
-                   where N_ASSETS learned queries attend to time patches directly.
+Exp 0004: Attention entropy regularization
+Hypothesis: Even with temp=0.1, portfolio weights barely move (std ~1.2%). The model
+            finds sharp attention but the score_proj + softmax smooths everything.
+            Adding an entropy penalty to the LOSS (not just temperature) directly
+            encourages the model to use attention discriminatively for Sharpe.
+Expected: val_sharpe [-1.0, 1.5], portfolio weight std > 0.02
+Change vs Exp 0002: Add -0.1 * mean_entropy to loss. Fixed temp=0.1.
 """
 
 import time, math, torch, torch.nn as nn
@@ -37,10 +35,11 @@ class CrossAttentionAllocator(nn.Module):
     focus on different time patches. During crises, assets should attend
     to recent volatile patches; during calm, attention spreads out.
     """
-    def __init__(self, n_assets, d_model=8, n_patches=12):
+    def __init__(self, n_assets, d_model=8, n_patches=12, temperature=1.0):
         super().__init__()
         self.d_model = d_model
         self.n_assets = n_assets
+        self.temperature = temperature
         
         self.input_norm = nn.LayerNorm(n_assets)
         self.proj = nn.Linear(n_assets, d_model)
@@ -76,7 +75,7 @@ class CrossAttentionAllocator(nn.Module):
         # Cross attention: asset queries (4, 8) × keys (B, 12, 8)
         Q = self.asset_queries.unsqueeze(0).expand(B, -1, -1)  # (B, 4, 8)
         
-        scores = torch.bmm(Q, K.transpose(1, 2))  # (B, 4, 12)
+        scores = torch.bmm(Q, K.transpose(1, 2)) / self.temperature  # (B, 4, 12)
         attn = torch.softmax(scores, dim=-1)  # (B, 4, 12) — per-asset attention over time
         
         # Each asset gets its own time-weighted context
@@ -88,7 +87,7 @@ class CrossAttentionAllocator(nn.Module):
         
         if return_attn:
             return weights, attn  # attn shape: (B, 4, 12) — per-asset temporal attention
-        return weights
+        return weights, attn
 
     def count_params(self):
         return sum(p.numel() for p in self.parameters())
@@ -107,11 +106,13 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=500, lr=1e-3, patien
         model.train()
         optimizer.zero_grad()
 
-        w = model(X_train)
+        w, attn = model(X_train)
         port_ret = (w * Y_train).sum(dim=-1)
         mean_r = port_ret.mean()
         std_r = port_ret.std()
-        loss = -(mean_r / (std_r + 1e-8))
+        # Entropy regularization: penalize high entropy (uniform attention)
+        entropy = -(attn * (attn + 1e-10).log()).sum(dim=-1).mean()
+        loss = -(mean_r / (std_r + 1e-8)) + 0.1 * entropy
 
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -120,7 +121,7 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=500, lr=1e-3, patien
         if (epoch + 1) % 5 == 0:
             model.eval()
             with torch.no_grad():
-                w_val = model(X_val)
+                w_val, _ = model(X_val)
                 val_ret = (w_val * Y_val).sum(dim=-1)
                 vs = sharpe(val_ret)
             if vs > best_val:
@@ -214,7 +215,7 @@ def main():
     splits = make_expanding_splits(dates, indices)
     print(f"Expanding window: {len(splits)} splits")
 
-    model = CrossAttentionAllocator(n_assets=N, d_model=8, n_patches=N_PATCHES)
+    model = CrossAttentionAllocator(n_assets=N, d_model=8, n_patches=N_PATCHES, temperature=0.1)
     n_params = model.count_params()
     print(f"Model: CrossAttentionAllocator, {n_params} params")
     assert n_params <= MAX_PARAMS
@@ -223,14 +224,14 @@ def main():
     yearly_results = {}
 
     for split in splits:
-        model = CrossAttentionAllocator(n_assets=N, d_model=8, n_patches=N_PATCHES)
+        model = CrossAttentionAllocator(n_assets=N, d_model=8, n_patches=N_PATCHES, temperature=0.1)
         torch.manual_seed(42)
         val_sharpe = train_one_split(model, X, Y, split["train"], split["val"])
 
         model.eval()
         with torch.no_grad():
             test_idx = split["test"]
-            w_test = model(X[test_idx])
+            w_test, _ = model(X[test_idx])
             test_ret = (w_test * Y[test_idx]).sum(dim=-1)
             ts = sharpe(test_ret)
 
