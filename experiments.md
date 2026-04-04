@@ -109,3 +109,21 @@
 - Change: Seeds [123, 2024, 777], WD=5e-4
 - val_sharpe: 2.73 | test_sharpe: 0.22 | Individual vals: [2.52, 2.92, 2.37]
 - Verdict: KEEP (val near benchmark! but val/test gap is extreme — possible val overfit)
+
+## Exp 18: PatchTemporal + lightweight cross-asset linear mix
+- Hypothesis: Linear N→N mixing layer captures cross-asset correlations cheaply.
+- Change: Added cross_mix linear layer after temporal attention score
+- val_sharpe: 0.84 | test_sharpe: 2.95 | test_mdd: -1.6% | params: 2,132
+- Verdict: DISCARD (cross-mix destroyed val performance)
+
+## Exp 19: PatchTemporal with SGD+momentum + warm restarts
+- Hypothesis: SGD generalizes better than Adam, finds flatter minimum.
+- Change: SGD lr=0.05, momentum=0.9, CosineWarmRestarts
+- val_sharpe: 2.39 | test_sharpe: -0.42 | test_mdd: -5.4% | params: 1,826
+- Verdict: DISCARD (SGD didn't help, test is negative)
+
+## Exp 20: 2-layer temporal attention with shared QKV
+- Hypothesis: Hierarchical temporal representations from 2 attention layers.
+- Change: n_layers=2, shared QKV, separate LayerNorms
+- val_sharpe: 2.51 | test_sharpe: 1.06 | test_mdd: -2.3% | params: 1,858
+- Verdict: DISCARD (good but not beating ensemble val=2.73)
