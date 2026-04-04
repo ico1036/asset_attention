@@ -13,6 +13,12 @@
 5. **Patching**: Compress days into patches (e.g., 5-day). Reduces sequence length, preserves local patterns.
 6. **Modern building blocks**: RoPE, SwiGLU, RMSNorm — free upgrades from LLM research.
 
+## Overfitting is the Enemy (Lesson from Round 1)
+- val_sharpe↑ while test_sharpe↓ = overfitting. The simplest MLP (692 params) had best test_sharpe (3.94).
+- Primary metric: **test_sharpe** (not val_sharpe). Val is for early stopping only.
+- Secondary: **val-test gap** — minimize it. Gap > 1.0 = suspicious.
+- Goal: beat Equal Weight benchmark on TEST set (EW test_sharpe ≈ 2.76).
+
 ## Complexity Must Be Earned
 - Baseline: Linear (DLinear). If attention can't beat linear, it's not needed.
 - Add complexity one step at a time: Linear → MLP → Single Attention → Dual Attention
