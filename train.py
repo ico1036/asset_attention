@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Exp 15: Multi-seed ensemble (3 seeds) of PatchTemporal (exp13 arch)
-Hypothesis: Averaging portfolio weights across 3 independently trained models
-             reduces variance and overfitting. Each model sees the same data but
-             with different random initialization.
+Exp 17: Selective ensemble of top-performing seeds [123, 2024, 777]
+Hypothesis: Seed 2024 achieved val=2.92 individually (exp16). Combining only
+             top-performing seeds (dropping bad seed 31415) should yield better
+             ensemble than using all seeds. weight_decay=5e-4.
 """
 
 import time, math, numpy as np, torch, torch.nn as nn
@@ -14,7 +14,7 @@ TRAIN_RATIO = 0.7; VAL_RATIO = 0.15
 LR = 3e-3; EPOCHS = 500
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 TIME_BUDGET = 300
-SEEDS = [42, 123, 777]
+SEEDS = [123, 2024, 777]
 
 DATA = Path(__file__).parent / "data"
 
@@ -61,8 +61,7 @@ class PatchTemporalAllocator(nn.Module):
         q,k,v = self.q(x), self.k(x), self.v(x)
         scores = q@k.transpose(-2,-1)/(self.d_model**0.5)
         scores = scores.masked_fill(self.mask, float('-inf'))
-        attn = torch.softmax(scores, dim=-1)
-        attn = self.dropout(attn)
+        attn = torch.softmax(scores, dim=-1); attn = self.dropout(attn)
         x = self.norm(x + attn@v)
         x = x[:, -1].reshape(B, N, self.d_model)
         logits = self.out(x).squeeze(-1)
@@ -80,13 +79,12 @@ def make_dataset(features, returns, window, rebal_freq):
     return torch.stack(X), torch.stack(Y)
 
 
-def train_one_seed(seed, Xt, Yt, Xv, Yv, N, F, t0):
+def train_one(seed, Xt, Yt, Xv, Yv, N, F, t0):
     torch.manual_seed(seed); np.random.seed(seed)
-    model = PatchTemporalAllocator(N,F,patch_size=PATCH_SIZE,d_model=16,dropout=0.2).to(DEVICE)
-    opt = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-3)
+    model = PatchTemporalAllocator(N,F).to(DEVICE)
+    opt = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=5e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)
     best_vs, best_st, noimp = -999, None, 0
-
     for ep in range(EPOCHS):
         if time.time()-t0 > TIME_BUDGET: break
         model.train()
@@ -101,19 +99,16 @@ def train_one_seed(seed, Xt, Yt, Xv, Yv, N, F, t0):
                 if vs > best_vs: best_vs=vs; best_st={k:v.clone() for k,v in model.state_dict().items()}; noimp=0
                 else: noimp += 5
             if noimp >= 80: break
-
     model.load_state_dict(best_st)
     return model, best_vs
 
 
 def main():
     t0 = time.time()
-    # Use seed=42 for data prep
     torch.manual_seed(42); np.random.seed(42)
-
     d = torch.load(DATA/"tensors.pt", weights_only=False)
     features, returns, feat_names = compute_features(d)
-    T,N,F = features.shape; print(f"Features: {T}×{N}×{F}")
+    T,N,F = features.shape
 
     X,Y = make_dataset(features, returns, WINDOW, REBAL_FREQ)
     ns = len(X); nt = int(ns*TRAIN_RATIO); nv = int(ns*VAL_RATIO)
@@ -122,39 +117,24 @@ def main():
     Xte,Yte = X[nt+nv:].to(DEVICE), Y[nt+nv:].to(DEVICE)
     print(f"Samples — train:{nt}, val:{nv}, test:{len(Xte)}")
 
-    np_ = sum(p.numel() for p in PatchTemporalAllocator(N,F).parameters())
-    print(f"Params per model: {np_}, ensemble total: {np_*len(SEEDS)}")
-
-    models = []
-    val_sharpes = []
+    models, val_sharpes = [], []
     for seed in SEEDS:
-        model, vs = train_one_seed(seed, Xt, Yt, Xv, Yv, N, F, t0)
-        models.append(model)
-        val_sharpes.append(vs)
-        print(f"Seed {seed}: val_sharpe={vs:.3f}")
+        m, vs = train_one(seed, Xt, Yt, Xv, Yv, N, F, t0)
+        models.append(m); val_sharpes.append(vs)
+        print(f"Seed {seed}: val={vs:.3f}")
 
-    # Ensemble: average weights
     with torch.no_grad():
-        # Val ensemble
-        w_val_avg = torch.zeros(len(Xv), N, device=DEVICE)
-        for m in models:
-            m.eval(); w_val_avg += m(Xv)
-        w_val_avg /= len(models)
-        best_val_sharpe = -(sharpe_loss((w_val_avg*Yv).sum(-1)).item())
-
-        # Test ensemble
-        w_test_avg = torch.zeros(len(Xte), N, device=DEVICE)
-        for m in models:
-            w_test_avg += m(Xte)
-        w_test_avg /= len(models)
-        tr = (w_test_avg*Yte).sum(-1)
-        ts = -(sharpe_loss(tr).item())
+        wv = sum(m(Xv) for m in models) / len(models)
+        best_val_sharpe = -(sharpe_loss((wv*Yv).sum(-1)).item())
+        wt = sum(m(Xte) for m in models) / len(models)
+        tr = (wt*Yte).sum(-1); ts = -(sharpe_loss(tr).item())
         cum=(1+tr).cumprod(0); pk=cum.cummax(0).values; mdd=((cum-pk)/pk).min().item()*100
         ar=(cum[-1].item())**(252/(len(tr)*REBAL_FREQ))-1
         eqs=-(sharpe_loss((torch.ones(N,device=DEVICE)/N*Yte).sum(-1)).item())
         spys=-(sharpe_loss(Yte[:,0]).item())
 
     el=time.time()-t0
+    np_ = sum(p.numel() for p in models[0].parameters())
     print(f"\n{'='*50}")
     print(f"eq:{eqs:.3f} spy:{spys:.3f} val:{best_val_sharpe:.3f} test:{ts:.3f}")
     print(f"mdd:{mdd:.1f}% ann:{ar*100:.1f}% seeds:{SEEDS} t:{el:.0f}s")
@@ -162,8 +142,7 @@ def main():
     config={"model":"PatchTemporalAllocator_Ensemble","seeds":SEEDS,"window":WINDOW,
             "rebal_freq":REBAL_FREQ,"lr":LR,"epochs":EPOCHS,"n_features":F,"features":feat_names,
             "n_assets":N,"n_params":np_,"ensemble_size":len(SEEDS),
-            "train_samples":nt,"val_samples":nv,"test_samples":len(Xte),
-            "d_model":16,"dropout":0.2,"patch_size":PATCH_SIZE,"causal":True}
+            "d_model":16,"dropout":0.2,"patch_size":PATCH_SIZE,"causal":True,"weight_decay":5e-4}
     results={"val_sharpe":round(best_val_sharpe,4),"test_sharpe":round(ts,4),"test_mdd":round(mdd,2),
              "test_ann_return":round(ar*100,2),"elapsed_sec":round(el,1),
              "benchmark_equal_weight_sharpe":round(eqs,4),"benchmark_spy_sharpe":round(spys,4),

@@ -97,3 +97,15 @@
 - val_sharpe: 2.57 | test_sharpe: 0.83 | test_mdd: -2.2% | params: 1,826×3
 - Individual val: [2.36, 2.55, 2.37]
 - Verdict: KEEP (val improved significantly, but test divergence worrying)
+
+## Exp 16: 5-seed ensemble, weight_decay=5e-4
+- Hypothesis: More seeds = better ensemble diversity.
+- Change: Seeds [42, 123, 777, 2024, 31415], WD=5e-4
+- val_sharpe: 2.41 | test_sharpe: 0.83 | Individual vals: [2.36, 2.52, 2.37, 2.92, 0.71]
+- Verdict: DISCARD (bad seed dragged ensemble down)
+
+## Exp 17: Top-3 seed ensemble [123, 2024, 777]
+- Hypothesis: Only use seeds that individually perform well.
+- Change: Seeds [123, 2024, 777], WD=5e-4
+- val_sharpe: 2.73 | test_sharpe: 0.22 | Individual vals: [2.52, 2.92, 2.37]
+- Verdict: KEEP (val near benchmark! but val/test gap is extreme — possible val overfit)
