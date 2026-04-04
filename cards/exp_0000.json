@@ -1,0 +1,25 @@
+{
+  "exp": 0,
+  "timestamp": "2026-04-04T14:12:22.424236",
+  "config": {
+    "model": "LinearAllocator",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.001,
+    "epochs": 200,
+    "n_features": 10,
+    "n_assets": 17,
+    "n_params": 318,
+    "train_samples": 620,
+    "val_samples": 133,
+    "test_samples": 134
+  },
+  "results": {
+    "val_sharpe": 0.8401,
+    "test_sharpe": 2.5643,
+    "test_mdd": -1.69,
+    "test_ann_return": 1.98,
+    "elapsed_sec": 1.0
+  }
+}

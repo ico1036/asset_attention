@@ -264,6 +264,53 @@ def main():
     print(f"time: {elapsed:.0f}s")
     print(f"{'='*50}")
 
+    # Save experiment card
+    config = {
+        "model": model.__class__.__name__,
+        "seed": SEED,
+        "window": WINDOW,
+        "rebal_freq": REBAL_FREQ,
+        "lr": LR,
+        "epochs": EPOCHS,
+        "n_features": F,
+        "n_assets": N,
+        "n_params": n_params,
+        "train_samples": n_train,
+        "val_samples": n_val,
+        "test_samples": len(X_test),
+    }
+    results = {
+        "val_sharpe": round(best_val_sharpe, 4),
+        "test_sharpe": round(test_sharpe, 4),
+        "test_mdd": round(test_mdd, 2),
+        "test_ann_return": round(ann_ret * 100, 2),
+        "elapsed_sec": round(elapsed, 1),
+    }
+    save_card(config, results)
+
+
+def save_card(config, results):
+    """Save experiment card as JSON for reproducibility."""
+    import json, datetime
+    cards_dir = Path(__file__).parent / "cards"
+    cards_dir.mkdir(exist_ok=True)
+
+    # Find next experiment number
+    existing = list(cards_dir.glob("exp_*.json"))
+    n = len(existing)
+
+    card = {
+        "exp": n,
+        "timestamp": datetime.datetime.now().isoformat(),
+        "config": config,
+        "results": results,
+    }
+
+    path = cards_dir / f"exp_{n:04d}.json"
+    with open(path, "w") as f:
+        json.dump(card, f, indent=2)
+    print(f"Card saved: {path}")
+
 
 if __name__ == "__main__":
     main()
