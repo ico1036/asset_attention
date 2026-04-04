@@ -24,13 +24,20 @@ This is the entire reason this project exists. Everything below serves this miss
 - Cross-attention, sparse attention, linear attention, state-space hybrids with attention gates, learned query prototypes — anything goes as long as the core mechanism attends over time and learns regime-like patterns.
 - If standard approaches hit a wall, THINK DIFFERENTLY. The goal is regime-aware allocation via learned temporal attention — how you get there is open.
 
-## Design Principles (under the mission)
+## 단순함의 미학 (under the mission)
 
-1. **Simplicity serves the mission**: Strip unnecessary complexity FROM THE ATTENTION MODEL. Don't replace attention with something simpler. Make the attention architecture itself as clean as possible.
-2. **Data-honest**: ≤25K params. If data is insufficient for the current architecture, fix the data problem (more assets, higher frequency, augmentation) — don't abandon the architecture.
-3. **Price-based features only**: No lagging macro indicators.
-4. **Dual Attention**: Spatial (cross-asset) + Temporal (time patterns). Test both orders and interleaved.
-5. **Patching**: Compress days into patches to give temporal attention meaningful chunks.
+**핵심만 사용하고 군더더기가 없어야 한다.**
+
+- 아이디어 하나에 코드 변경 하나. 한 실험에 3가지를 동시에 바꾸지 마라.
+- 새 레이어를 추가하려면 기존 레이어를 제거할 이유를 먼저 대라.
+- 창의성 = 복잡한 코드가 아니라 본질적인 관찰. 10줄로 된 핵심 아이디어가 100줄 엔지니어링을 이긴다.
+- 모델 코드가 100줄을 넘으면 의심하라. 진짜 필요한 게 뭔지 다시 생각하라.
+
+구체적으로:
+1. **≤25K params**. 데이터가 부족하면 모델을 키우지 말고 데이터를 늘려라.
+2. **Price-based features only**. 매크로 지표 금지.
+3. **Dual Attention** (spatial + temporal)을 탐색하되, 둘 다 필요한지 실험으로 증명하라.
+4. **Patching**: 시간 압축의 가장 단순한 방법.
 
 ## Data Scarcity is a Problem to SOLVE, Not a Reason to Quit
 

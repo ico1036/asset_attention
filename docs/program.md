@@ -1,6 +1,6 @@
 # Program
 
-Read `philosophy.md` first. THE MISSION is non-negotiable.
+Read `docs/philosophy.md` first. THE MISSION is non-negotiable.
 
 ## THE RULE
 
@@ -27,7 +27,7 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 
 ## Experiment Loop
 
-1. Read `philosophy.md`, `insights.md`, `experiments.md`.
+1. Read `docs/philosophy.md`, `docs/insights.md`, `docs/experiments.md`.
 2. Form a hypothesis about how attention can learn regimes. Write it at the top of `train.py`:
    ```python
    # Hypothesis: PatchTST with 5-day patches lets attention see weekly patterns
@@ -36,7 +36,7 @@ uv run prepare.py   # builds tensors from parquet, ~10s
    ```
 3. Modify `train.py`. The model MUST have attention over a time axis.
 4. Run: `uv run guard.py` (never train.py directly).
-5. Record in `experiments.md`:
+5. Record in `docs/experiments.md`:
    ```
    ## Exp N: [description]
    - Hypothesis: ...
@@ -72,12 +72,12 @@ from prepare import (
 
 ## Self-Respawn (mandatory on session end)
 1. Remove LOCK.
-2. Update `insights.md`.
+2. Update `docs/insights.md`.
 3. `git add -A && git commit -m "round N complete" && git push`
 4. `sessions_send(sessionKey="main", message="Round complete. Spawn next.")`
 
 ## Self-Diagnosis (before every experiment)
-- Read `insights.md` first.
+- Read `docs/insights.md` first.
 - If val-test gap > 1.5: overfitting → reduce model or add regularization.
 - If training finishes in < 30s with >0 params: data pipeline or model too small.
 - If attention weights are static across all periods: the model isn't learning regimes. Change architecture.
@@ -98,11 +98,11 @@ from prepare import (
 
 ## Dream Phase (every 10 experiments)
 
-1. Read all cards and `experiments.md`.
+1. Read all cards and `docs/experiments.md`.
 2. **Mission check**: How many experiments actually had attention over time? If < 100%, explain why and fix.
 3. **Regime check**: In the best model so far, do attention weights change meaningfully across market periods? If not, what's missing?
 4. Extract patterns. Generate 3 new hypotheses for how attention can capture regimes.
-5. Update `insights.md` with:
+5. Update `docs/insights.md` with:
    - Mission progress (not just Sharpe numbers)
    - Best regime signal observed so far
    - Next hypotheses
