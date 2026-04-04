@@ -12,3 +12,21 @@
 - Change: MLPAllocator(hidden=32, dropout=0.3), cosine LR, grad clip, early stopping patience=50
 - val_sharpe: 1.18 | test_sharpe: 3.94 | test_mdd: -0.8% | params: 692
 - Verdict: KEEP
+
+## Exp 2: MLP with temporal pooling (last+mean+std)
+- Hypothesis: Richer temporal stats improve over simple mean pooling.
+- Change: 3×F input (last, mean, std), hidden=48, 1844 params
+- val_sharpe: 0.68 | test_sharpe: 2.95 | test_mdd: -1.5% | params: 1,844
+- Verdict: DISCARD (overfits fast, val worse than exp1)
+
+## Exp 3: MLP + turnover penalty
+- Hypothesis: Turnover penalty smooths training, improves val_sharpe.
+- Change: Same as exp1 + turnover lambda=0.01, lower LR=1e-3
+- val_sharpe: 0.76 | test_sharpe: 2.78 | test_mdd: -1.6% | params: 692
+- Verdict: DISCARD (turnover penalty hurt val_sharpe)
+
+## Exp 4: Single-head spatial attention (assets as tokens)
+- Hypothesis: Self-attention over assets captures dynamic cross-asset correlations.
+- Change: SpatialAttentionAllocator d_model=16, 1 head, LayerNorm, residual
+- val_sharpe: 1.77 | test_sharpe: 1.33 | test_mdd: -2.0% | params: 994
+- Verdict: KEEP (val improved but val/test gap concerning)

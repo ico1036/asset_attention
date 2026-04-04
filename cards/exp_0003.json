@@ -1,0 +1,43 @@
+{
+  "exp": 3,
+  "timestamp": "2026-04-04T14:23:33.444224",
+  "verdict": "DISCARD",
+  "config": {
+    "model": "MLPAllocator",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.001,
+    "epochs": 1000,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "train_samples": 620,
+    "val_samples": 133,
+    "test_samples": 134,
+    "hidden_dim": 32,
+    "dropout": 0.3,
+    "turnover_lambda": 0.01
+  },
+  "results": {
+    "val_sharpe": 0.7611,
+    "test_sharpe": 2.7783,
+    "test_mdd": -1.63,
+    "test_ann_return": 2.09,
+    "elapsed_sec": 1.1,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "benchmark_spy_sharpe": 2.1225
+  }
+}
