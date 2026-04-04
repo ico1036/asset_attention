@@ -34,6 +34,8 @@
 - **Survivorship bias**: All 17 ETFs still trade today. If adding new assets, verify listing date.
 - **Z-score normalization**: Must be expanding window (train only), never full-sample.
 - **Walk-forward**: Train on past, validate on unseen future. No shuffling. Time order sacred.
+  - Phase 1 (current): Single sequential split (70/15/15). Simple and fast.
+  - Phase 2 (later): Rolling window retrain for robustness check.
 - **Rebalancing cost**: Assume 5bps per turnover as baseline. Turnover penalty in loss reflects this.
 
 ## What NOT to Do

@@ -198,8 +198,12 @@ def main():
 
     # Model
     model = LinearAllocator(N, F, WINDOW).to(DEVICE)
+    MAX_PARAMS = 25_000
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Parameters: {n_params:,}")
+    if n_params > MAX_PARAMS:
+        print(f"❌ ABORT: {n_params:,} params exceeds limit of {MAX_PARAMS:,}")
+        return
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-4)
 

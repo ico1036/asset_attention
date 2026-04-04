@@ -4,7 +4,7 @@ Read `philosophy.md` first. It defines WHY we're doing this and the constraints.
 
 ## Lock Protocol
 Before starting experiments, create `LOCK` file. Remove it when done.
-If `LOCK` exists when you start, another agent is running — wait or abort.
+If `LOCK` exists, check its timestamp. If older than 1 hour, it's stale — delete and proceed. Otherwise wait or abort.
 ```bash
 if [ -f LOCK ]; then echo "LOCKED"; exit 1; fi
 echo "$(date)" > LOCK
@@ -24,6 +24,7 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 2. Form a hypothesis. Write it as a comment at the top of `train.py`.
 3. Modify `train.py`. You may change anything: model architecture, optimizer, loss, hyperparameters.
 4. Run: `uv run train.py` — fixed 5-minute wall clock budget. This auto-saves a card to `cards/exp_NNNN.json`.
+   Add model-specific details to the config dict in train.py (e.g., n_layers, d_model, n_heads, attention_order).
 5. Record result in `experiments.md` (use same exp number as the card):
    ```
    ## Exp N: [short description]
