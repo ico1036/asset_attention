@@ -260,8 +260,21 @@ def main():
         total_ret = cum_ret[-1].item() - 1
         ann_ret = (1 + total_ret) ** (252 / (n_periods * REBAL_FREQ)) - 1
 
+    # Benchmarks
+    with torch.no_grad():
+        # Equal weight
+        eq_w = torch.ones(N, device=DEVICE) / N
+        eq_ret = (eq_w * Y_test).sum(dim=-1)
+        eq_sharpe = -(sharpe_loss(eq_ret).item())
+
+        # SPY only (first ticker)
+        spy_ret = Y_test[:, 0]
+        spy_sharpe = -(sharpe_loss(spy_ret).item())
+
     elapsed = time.time() - start_time
     print(f"\n{'='*50}")
+    print(f"benchmark_equal_weight_sharpe: {eq_sharpe:.3f}")
+    print(f"benchmark_spy_sharpe: {spy_sharpe:.3f}")
     print(f"val_sharpe: {best_val_sharpe:.3f}")
     print(f"test_sharpe: {test_sharpe:.3f}")
     print(f"test_mdd: {test_mdd:.1f}%")
@@ -292,6 +305,8 @@ def main():
         "test_mdd": round(test_mdd, 2),
         "test_ann_return": round(ann_ret * 100, 2),
         "elapsed_sec": round(elapsed, 1),
+        "benchmark_equal_weight_sharpe": round(eq_sharpe, 4),
+        "benchmark_spy_sharpe": round(spy_sharpe, 4),
     }
     # Load previous best for auto-verdict
     import json as _json

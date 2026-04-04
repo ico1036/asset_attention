@@ -37,6 +37,11 @@ uv run prepare.py   # builds tensors from parquet, ~10s
    If DISCARD: `git checkout HEAD -- train.py` to restore last KEEP version. Card stays (failures are data too).
 7. Repeat from step 1.
 
+## Session Limits
+- Default: run up to 20 experiments per session, then stop and remove LOCK.
+- Or stop when time budget (e.g., 3 hours) is reached.
+- Always remove LOCK on exit, even on error (use try/finally).
+
 ## Rules
 - Only modify `train.py`. Never touch `prepare.py`.
 - `train.py` may read any file in `data/` (parquets, tensors, metadata). This is not "modifying prepare.py".
