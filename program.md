@@ -33,6 +33,14 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 - Walk-forward validation: train on past, test on unseen future. No peeking.
 - Every experiment must be reproducible (set seed).
 
+## Dream Phase (AutoDream)
+
+Every 10 experiments, pause and "dream":
+1. Read all of `experiments.md`.
+2. Extract patterns: what consistently helps, what consistently fails, what's untested.
+3. Write/update `insights.md` with distilled learnings.
+4. Before each new experiment, check `insights.md` — don't repeat known failures.
+
 ## What to Try
 - Attention order variations (spatial→temporal, temporal→spatial, interleaved)
 - Patch sizes (3, 5, 10 days)
