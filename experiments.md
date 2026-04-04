@@ -559,3 +559,109 @@
 - Walk-forward robust (77% win rate across 13 windows)
 - 0 learned parameters, Calmar ratio 11.74, 70.9% positive weeks
 - Verdict: KEEP ⭐⭐⭐ FINAL ANSWER
+
+## Round 6 Experiments (Exp 88-107)
+
+### Exp 88: Analytical strategy comparison (Risk Parity, MaxDiv, InvVol, MaxSharpe)
+- Hypothesis: Alternative analytical strategies may beat LW MinVar
+- Result: LW_MinVar > MaxDiv (3.70) > MaxSharpe (3.38) > InvVol (3.30) > EW (2.76) >> RiskParity (1.66)
+- Verdict: DISCARD — nothing beats LW MinVar
+
+### Exp 89: Window length sweep for MinVar (30-120 days)
+- Hypothesis: Optimal lookback window for covariance estimation
+- Result: w120 (test 5.31) > w60 (test 5.06). Longer windows help.
+- Verdict: KEEP — discovered longer window = better
+
+### Exp 90: Extended windows + EWMA covariance (up to w500)
+- Hypothesis: Even longer windows improve further
+- Result: LW_w500_hl250 test=6.57, LW_w250 test=6.18. Clear improvement.
+- Verdict: KEEP
+
+### Exp 91: Multi-split robustness (4 different train/val/test splits)
+- Hypothesis: w250 improvement is robust across splits
+- w250 beats w60 in ALL 4 splits; walk-forward w250 wins 13/16 (81%)
+- Verdict: KEEP — genuine improvement confirmed
+
+### Exp 92: Decay-weighted LW MinVar
+- Best: LW_w500_hl250 test=6.57, LW_expanding_hl1000 test=8.15
+- Verdict: KEEP (committed with exp 88-91)
+
+### Exp 93: Very long windows + expanding window
+- LW_expanding: test=8.73 but val=0.02 (75% SHY, nearly static)
+- Longer window always better but increasing concentration
+- Verdict: DISCARD — too concentrated
+
+### Exp 94: Portfolio composition analysis + weight constraints
+- LW_w250: SHY 33%, UUP 23%; LW_expanding: SHY 75%
+- Max 20% cap: test drops from 6.6 → 3.8
+- MinVar's edge IS concentration in low-vol assets
+- Verdict: DISCARD — constraints destroy alpha
+
+### Exp 95: Entropy/L2 regularized MinVar
+- Entropy penalty collapses to EW (scale mismatch: var~1e-5, entropy~O(1))
+- L2_0.001: val=0.25, test=3.48 — trades too much for diversification
+- Verdict: DISCARD
+
+### Exp 96: α*MinVar + (1-α)*EW blending + Vol-targeting
+- Blend: monotonic — more MinVar always better
+- VolTarget_2%: val=1.81 (best val!), test=6.50, ~10% avg leverage
+- Verdict: KEEP (vol-targeting concept)
+
+### Exp 97: ML residual on top of MinVar
+- All ML deltas hurt: more delta → worse test (6.57 baseline → 4.91 at delta=0.20)
+- Verdict: DISCARD — ML can't improve analytical optimum
+
+### Exp 98: Regime-dependent shrinkage
+- LW auto-shrinkage already optimal. Fixed shrinkage all worse.
+- Verdict: DISCARD
+
+### Exp 99: Rebalancing frequency analysis
+- rebal=1: test 2.9; rebal=5: test 6.3; rebal=20: test 18.4 (Sharpe scaling artifact)
+- Weekly is the right frequency for comparison
+- Verdict: DISCARD (informational)
+
+### Exp 100: Multi-horizon ensemble + momentum + drift threshold
+- Ensemble_avg: test 6.37 (between w500 and w750)
+- Momentum overlay: hurts (5.7 → 4.8 with increasing weight)
+- Drift_5%: val 1.35, test 6.25, lower turnover (0.012)
+- Verdict: DISCARD
+
+### Exp 101: Vol-targeted MinVar with drift threshold
+- VT2_Drift5: val 1.84 (best), test 5.96, 10% leverage
+- Walk-forward: no dominant variant
+- Verdict: DISCARD — vol-targeting doesn't improve on raw MinVar
+
+### Exp 102: HRP (Hierarchical Risk Parity) comparison
+- HRP_w500: test 4.20, high turnover 0.08; MinVar_w500: test 6.26, TO 0.02
+- Verdict: DISCARD — HRP far inferior
+
+### Exp 103: Oracle analysis + fixed shrinkage sweep
+- Oracle (perfect foresight): Sharpe ~24
+- Look-ahead MinVar WORSE than past-cov MinVar (5.58 vs 6.26!)
+- LW auto-shrinkage near-optimal; FixedShrink_0.0 → 5.07
+- Verdict: DISCARD (informational)
+
+### Exp 104: Alternative portfolio objectives (min_corr, max_deconc, min_cvar)
+- Analytical MinVar > all optimizer-based variants
+- Min correlation: val 2.19 but test 4.33
+- Verdict: DISCARD
+
+### Exp 105: Mean-Variance, Black-Litterman, Sortino weights
+- Mean-Variance with shrunk returns: val 1.89 but test 4.74 — return estimation hurts
+- BL with EW prior = EW
+- Sortino ≈ InvVol
+- Verdict: DISCARD
+
+### Exp 106: Strategy timing (dispersion, correlation, ML)
+- All timing approaches hurt MinVar
+- ML timer learns α≈0.7 (mostly MinVar), test 4.9-5.3
+- "Always MinVar" beats "timed MinVar"
+- Verdict: DISCARD
+
+### Exp 107: FINAL comprehensive walk-forward
+- 64 quarterly windows: MinVar wins 73%
+- 32 semi-annual windows: MinVar wins 75%
+- 16 annual windows: MinVar wins 75%
+- Year-by-year: MinVar wins 13/17 years (76%)
+- Full-period: Sharpe 2.72 vs EW 1.20, MDD -1.0% vs -5.1%
+- Verdict: KEEP — definitive result

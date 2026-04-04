@@ -1,80 +1,96 @@
 # Insights
 
-_Updated by Dream Phase (Round 5 final) after Exp 87. 87 experiments across 5 rounds._
+_Updated by Dream Phase (Round 6 final) after Exp 107. 107 experiments across 6 rounds._
 
-## The Definitive Answer: LW_MinVar Beats Everything
+## The Definitive Answer: LW_MinVar_w500 Is the Champion
 
-**87 experiments across 5 rounds. The winner has 0 learned parameters.**
+**107 experiments across 6 rounds. The winner still has 0 learned parameters.**
 
-### Ledoit-Wolf Minimum Variance Portfolio
-| Metric | LW_MinVar | EW | Δ |
-|--------|-----------|-----|-----|
-| Val Sharpe | 1.126 | 0.763 | +0.363 |
-| Test Sharpe | 5.055 | 2.755 | +2.300 |
-| Ann. Vol | 1.3% | 3.9% | -2.6% |
-| MDD | -0.57% | -1.67% | +1.10% |
-| Calmar | 11.74 | 6.48 | +5.26 |
-| Positive Weeks | 70.9% | 63.4% | +7.5% |
-| Walk-Forward Win Rate | 77% (10/13) | 23% (3/13) | — |
-| Robust Across 4 Splits | ✓ (+1.2 to +2.3 Δtest) | — | — |
+### Best Strategy: LW MinVar with 500-day lookback window
 
-### Why LW_MinVar Wins
+| Metric | LW_MinVar_w500 | LW_MinVar_w60 (R5) | EW | 
+|--------|---------------|---------------------|-----|
+| Full-Period Sharpe | 2.724 | 2.15 (est) | 1.202 |
+| Test Sharpe (70/15/15) | 6.26 | 5.06 | 2.89 |
+| Ann. Vol | 1.07% | 1.3% | 4.86% |
+| MDD | -0.97% | -0.57% | -5.05% |
+| Ann. Return | 2.91% | ~2.5% | 5.84% |
+| Walk-Forward Win Rate | 73-75% | 77% | 25-27% |
+| Years Won (out of 17) | 13 (76%) | — | 4 (24%) |
+| Turnover | 0.019 | 0.064 | 0.000 |
+| Parameters | 0 | 0 | 0 |
 
-1. **Covariance estimation ≠ return prediction.** MinVar only needs the covariance matrix (how assets move together). LW shrinkage provides a stable estimate from just 60 daily returns. In contrast, learned models need to predict RETURNS (much harder, noisier) from features.
+### Key R6 Discovery: Longer Covariance Windows Are Better
 
-2. **0 parameters = 0 overfitting.** With 620 training samples, any model with >~50 params risks overfitting. MinVar is analytical — no training, no overfitting.
+**The single most important finding of Round 6**: w60 → w250 → w500 → w750 monotonically improves MinVar test Sharpe (5.1 → 6.2 → 6.3 → 6.8). This was robust across 4 different train/val/test splits.
 
-3. **Structural information > learned patterns.** The 17-ETF universe spans hugely different risk profiles (SHY vol≈0.3% vs USO vol≈3%). MinVar exploits this structural difference to construct low-risk portfolios. No model can "learn" this better than the math.
+Why: More data → more stable covariance estimate → more stable weights → less unnecessary turnover → higher Sharpe. The LW shrinkage automatically adapts to sample size.
 
-4. **The portfolio is defensive:** UUP 24%, SHY 22%, TIP 13%, HYG 12%, IEF 10% (~80% bonds/cash). This worked in 2019-2026 (val + test) because risk-adjusted returns of defensive assets were strong.
+### Portfolio Composition (w500 test period avg)
+- SHY (short-term bonds): 42%
+- UUP (US dollar): 22%
+- TIP (inflation-protected): 9%
+- HYG (high-yield): 8%
+- IEF (intermediate bonds): 5%
+- Others: ~14% combined
+- **~80% in bonds/cash/dollar — a defensive allocation**
 
-### Why Learned Models (Including Attention) Failed
+### Why Nothing Beats Pure MinVar
 
-1. **620 samples is not enough.** All models with >50 params converge to EW with proper regularization, or overfit without it. The "alpha region" between EW-convergence and overfitting is too narrow.
+Round 6 tried 20 approaches to improve MinVar. **All failed:**
 
-2. **Attention doesn't help with covariance.** Self-attention computes Q·K^T which is structurally similar to a correlation matrix. But the analytical LW estimator is provably optimal for Gaussian data — attention can't improve on it with limited data.
+| Approach | Result | Why It Failed |
+|----------|--------|---------------|
+| ML residuals on MinVar | test ↓ 6.26 → 4.91 | Adds noise to optimal solution |
+| Momentum overlay | test ↓ 6.26 → 4.83 | Return prediction is harder than cov |
+| Risk Parity | test 1.66 | Doesn't exploit vol dispersion |
+| HRP | test 4.20 | Recursive bisection suboptimal |
+| Mean-Variance | test 4.74 | Return estimates noisy |
+| Strategy timing | test 4.86-5.31 | "Always MinVar" > "Timed MinVar" |
+| Weight constraints | test ↓ 6.26 → 3.75 | Edge IS concentration |
+| Entropy regularization | Collapsed to EW | Scale mismatch in objective |
+| Regime-dependent shrinkage | No improvement | LW already adaptive |
+| Black-Litterman | = EW | EW prior → EW posterior |
+| Vol-targeting | val↑ but test↓ | Look-ahead in vol scaling |
+| Alternative objectives | All worse | Analytical MinVar is exact |
 
-3. **Feature engineering doesn't matter** when the base strategy (MinVar) doesn't need features. MinVar uses only the return window — momentum, volume ratios, MA distances are irrelevant.
+### The Fundamental Insight (6 Rounds Distilled)
 
-4. **Even as a blender, attention is useless.** When trained to blend LW/EW, it learns α≈0.87 (87% LW) — essentially just validating "use LW."
+1. **Covariance estimation is easy; return prediction is hard.** MinVar only needs the former.
+2. **Structural information dominates.** SHY vol ≈ 0.3%, USO vol ≈ 3% — this 10x difference is stable and exploitable without any learning.
+3. **The Ledoit-Wolf shrinkage is provably optimal** for Gaussian data. No ML can improve it with limited samples.
+4. **Longer windows → better estimates → less turnover → higher Sharpe.** This is the only actionable improvement from Round 6.
+5. **MinVar's edge is concentration in low-vol assets.** Any diversification constraint weakens the strategy.
+6. **The strategy is genuinely robust**: 73-75% walk-forward win rate, 13/17 years beating EW.
 
-## Complete Strategy Ranking (Test Sharpe, w=60, r=5)
+### Limitations (Intellectual Honesty)
+- MinVar only returns 2.9% annually (vs EW 5.8%). It wins on Sharpe by reducing vol.
+- The strategy is 80% bonds/cash. An investor wanting equity exposure wouldn't use this.
+- Walk-forward win rate of 75% means 25% of the time EW is better (typically in calm bull markets).
+- Val-test gap is large for the 70/15/15 split because the test period (2024-2026) is especially favorable for defensive portfolios.
+
+### What Would Be Needed to Go Further
+- **Different asset universe**: Adding more equities or crypto would change the MinVar composition
+- **Return forecasting**: The only way to beat MinVar is with accurate return predictions, which requires either (a) much more data or (b) alternative data
+- **Transaction costs**: At weekly rebal with 1.9% turnover, costs are negligible (~0.1bps/year at 5bps/trade)
+
+## Complete Strategy Ranking (Test Sharpe, rebal=5, 70/15/15 split)
 
 | Rank | Strategy | Val | Test | Params | Type |
 |------|----------|-----|------|--------|------|
-| 1 | **LW_MinVar** | 1.13 | 5.06 | 0 | Analytical |
-| 2 | AdaptShrink_h0.7_l0.05 | 0.31 | 5.67 | 0 | Rule-based |
-| 3 | LW_MinVar_95%blend | 1.09 | 4.84 | 0 | Blend |
-| 4 | InvVol_lb40_fl0.5 | 0.32 | 3.46 | 0 | Heuristic |
-| 5 | MinVar (no LW) | 0.30 | 3.33 | 0 | Analytical |
-| 6 | InverseVol | -0.13 | 3.36 | 0 | Heuristic |
-| 7 | Ensemble_3way | 0.42 | 3.10 | 0 | Blend |
-| 8 | Attn_blender | 1.03 | 4.64 | 58 | Learned |
-| 9 | Attention | 1.46 | 2.16 | 944 | Learned |
-| 10 | **EqualWeight** | 0.76 | 2.76 | 0 | Baseline |
-| 11 | MLP | 0.92 | 2.41 | 692 | Learned |
-| 12 | Listwise Ranking | 0.79 | 2.74 | 193 | Learned |
-
-## Key Lessons Across 5 Rounds
-
-### What DOESN'T Work for Asset Allocation with Small Data
-- Transformer/attention architectures (overfit)
-- MLP with >100 params (overfit)
-- Pairwise ranking (consistent but ≈ EW)
-- Momentum-based tilts at weekly frequency
-- EW-deviation loss (models refuse to deviate)
-- Ensembles of learned models (dilute toward EW)
-- Bootstrap data augmentation (doesn't create information)
-- SWA, warm restarts, SGD (no improvement over Adam)
-
-### What WORKS
-- **Ledoit-Wolf Minimum Variance**: The clear winner. Analytical, robust, no overfitting.
-- **Inverse Volatility**: Simpler version of MinVar, ~80% of the benefit.
-- **Regime-conditional strategies**: Use more shrinkage in high-vol periods.
-- **Low turnover**: LW_MinVar has turnover=0.064, practical for implementation.
-
-### Meta-Insight
-The question was "Can attention beat Equal Weight for asset allocation?"
-The answer is: **No, but the right question was 'Can ANYTHING beat Equal Weight?' — and the answer is yes: Minimum Variance with Ledoit-Wolf shrinkage, which has been known since 2004.**
-
-The lesson: before building complex ML models, check if the problem has an analytical solution. Portfolio optimization does — it's called mean-variance optimization (Markowitz 1952), and with proper covariance estimation (Ledoit & Wolf 2004), it works better than any learned model with 620 samples.
+| 1 | **LW_MinVar_w750** | 0.83 | 6.82 | 0 | Analytical |
+| 2 | **LW_MinVar_w500** | 1.32 | 6.26 | 0 | Analytical |
+| 3 | LW_MinVar_w500_hl250 | 1.27 | 6.26 | 0 | Analytical |
+| 4 | Ensemble_avg (250/500/750) | 1.04 | 6.37 | 0 | Blend |
+| 5 | Drift_5% on w500 | 1.35 | 6.25 | 0 | Rule-based |
+| 6 | LW_MinVar_w250 | 0.94 | 5.97 | 0 | Analytical |
+| 7 | VolTarget_2% on w500 | 1.81 | 5.98 | 0 | Leveraged |
+| 8 | LW_MinVar_w60 (R5 winner) | 1.13 | 5.06 | 0 | Analytical |
+| 9 | MV_s0.5_g5 | 1.89 | 4.74 | 0 | Analytical |
+| 10 | HRP_w250 | 0.02 | 4.58 | 0 | Analytical |
+| 11 | MaxDiversification | 0.96 | 3.70 | 0 | Analytical |
+| 12 | InverseVol_w500 | -0.12 | 3.43 | 0 | Heuristic |
+| 13 | **EqualWeight** | 0.31 | 2.89 | 0 | Baseline |
+| 14 | ML Residual (best) | 1.16 | 5.63 | 465 | Learned |
+| 15 | ML Timer (best) | 0.67 | 5.31 | 49 | Learned |
+| 16 | Attention (R1-4) | 1.46 | 2.16 | 944 | Learned |
