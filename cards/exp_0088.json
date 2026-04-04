@@ -1,0 +1,95 @@
+{
+  "exp": 88,
+  "timestamp": "2026-04-04T18:37:28.626192",
+  "config": {
+    "model": "Analytical_comparison_R6",
+    "n_params": 0,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.1262,
+    "test_sharpe": 5.055,
+    "elapsed_sec": 0.9,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "EqualWeight": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554,
+        "mdd": -0.0167,
+        "turnover": 0.0
+      },
+      "LW_MinVar": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055,
+        "mdd": -0.0057,
+        "turnover": 0.0636
+      },
+      "RiskParity": {
+        "val_sharpe": -1.0082,
+        "test_sharpe": 1.6609,
+        "mdd": -0.0231,
+        "turnover": 0.5117
+      },
+      "MaxDiversification": {
+        "val_sharpe": 0.9639,
+        "test_sharpe": 3.6965,
+        "mdd": -0.0088,
+        "turnover": 0.1027
+      },
+      "InverseVol": {
+        "val_sharpe": -0.1598,
+        "test_sharpe": 3.2969,
+        "mdd": -0.0069,
+        "turnover": 0.0296
+      },
+      "MaxSharpe_Shrunk": {
+        "val_sharpe": 0.3347,
+        "test_sharpe": 3.3843,
+        "mdd": -0.0104,
+        "turnover": 0.295
+      }
+    },
+    "wf_wins": {
+      "EqualWeight": 0,
+      "LW_MinVar": 2,
+      "RiskParity": 0,
+      "MaxDiversification": 0,
+      "InverseVol": 0,
+      "MaxSharpe_Shrunk": 0
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      5,
+      60
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 1s vs expected ~30s for 0 params \u00d7 620 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 3.93 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=5.05 outside [-0.5, 5.0]"
+  ]
+}

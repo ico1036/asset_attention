@@ -1,0 +1,157 @@
+{
+  "exp": 91,
+  "timestamp": "2026-04-04T18:39:16.970497",
+  "config": {
+    "model": "LW_MinVar_w250_robust",
+    "n_params": 0,
+    "train_samples": 594,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.7998,
+    "test_sharpe": 6.1837,
+    "elapsed_sec": 4.5,
+    "benchmark_equal_weight_sharpe": 3.0305,
+    "all_results": {
+      "50/25/25_w60": {
+        "val_sharpe": 1.833,
+        "test_sharpe": 2.656,
+        "mdd": -0.0106,
+        "ew_test": 1.2335,
+        "delta": 1.4225
+      },
+      "50/25/25_w120": {
+        "val_sharpe": 1.4816,
+        "test_sharpe": 2.5929,
+        "mdd": -0.0103,
+        "ew_test": 1.2335,
+        "delta": 1.3594
+      },
+      "50/25/25_w250": {
+        "val_sharpe": 2.0982,
+        "test_sharpe": 3.0389,
+        "mdd": -0.01,
+        "ew_test": 1.2335,
+        "delta": 1.8054
+      },
+      "60/20/20_w60": {
+        "val_sharpe": 0.5887,
+        "test_sharpe": 5.0236,
+        "mdd": -0.0057,
+        "ew_test": 2.8466,
+        "delta": 2.177
+      },
+      "60/20/20_w120": {
+        "val_sharpe": 0.2023,
+        "test_sharpe": 5.2885,
+        "mdd": -0.0053,
+        "ew_test": 2.8466,
+        "delta": 2.4419
+      },
+      "60/20/20_w250": {
+        "val_sharpe": 0.5396,
+        "test_sharpe": 6.0318,
+        "mdd": -0.0044,
+        "ew_test": 2.8466,
+        "delta": 3.1853
+      },
+      "70/15/15_w60": {
+        "val_sharpe": 1.0956,
+        "test_sharpe": 4.9825,
+        "mdd": -0.0057,
+        "ew_test": 3.0305,
+        "delta": 1.952
+      },
+      "70/15/15_w120": {
+        "val_sharpe": 0.7217,
+        "test_sharpe": 5.3983,
+        "mdd": -0.0053,
+        "ew_test": 3.0305,
+        "delta": 2.3678
+      },
+      "70/15/15_w250": {
+        "val_sharpe": 0.7998,
+        "test_sharpe": 6.1837,
+        "mdd": -0.0044,
+        "ew_test": 3.0305,
+        "delta": 3.1532
+      },
+      "80/10/10_w60": {
+        "val_sharpe": 6.3311,
+        "test_sharpe": 3.8736,
+        "mdd": -0.0057,
+        "ew_test": 2.6667,
+        "delta": 1.2069
+      },
+      "80/10/10_w120": {
+        "val_sharpe": 6.1276,
+        "test_sharpe": 4.5157,
+        "mdd": -0.0053,
+        "ew_test": 2.6667,
+        "delta": 1.849
+      },
+      "80/10/10_w250": {
+        "val_sharpe": 6.7983,
+        "test_sharpe": 5.3338,
+        "mdd": -0.0044,
+        "ew_test": 2.6667,
+        "delta": 2.6672
+      }
+    },
+    "wf_summary": {
+      "50/25/25": {
+        "w250_wins": 3,
+        "w60_wins": 1,
+        "total": 4
+      },
+      "60/20/20": {
+        "w250_wins": 3,
+        "w60_wins": 1,
+        "total": 4
+      },
+      "70/15/15": {
+        "w250_wins": 3,
+        "w60_wins": 1,
+        "total": 4
+      },
+      "80/10/10": {
+        "w250_wins": 4,
+        "w60_wins": 0,
+        "total": 4
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.3,
+      1.5
+    ],
+    "train_time": [
+      1,
+      60
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 4s vs expected ~30s for 0 params \u00d7 594 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 5.38 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=6.18 outside [-0.5, 5.0]"
+  ]
+}
