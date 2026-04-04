@@ -51,6 +51,19 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 - Or stop when time budget (e.g., 3 hours) is reached.
 - Always remove LOCK on exit, even on error (use try/finally).
 
+## Self-Respawn (mandatory on session end)
+When your session limit (20 exp or 3hr) is reached, your LAST actions before exiting must be:
+1. Remove LOCK file.
+2. Update `insights.md` with this round's key findings.
+3. Append a round summary to `experiments.md`.
+4. `git add -A && git commit -m "round N complete" && git push`
+5. Send a respawn request to the main session:
+   ```
+   sessions_send(sessionKey="main", message="Autoresearch round complete. Please spawn next round. Last exp: N, insights updated.")
+   ```
+   If `sessions_send` is unavailable, write a file `RESPAWN_REQUEST` with the same info — the cron watchdog will pick it up.
+This ensures continuity. A cron watchdog also runs every 45 minutes as a safety net for crash recovery.
+
 ## Self-Diagnosis (run before every experiment)
 - Read `insights.md` first — it overrides generic rules with learned lessons.
 - If last experiment finished too fast (see guard.py estimates): investigate why. Check insights.md for known causes before changing data pipeline.
