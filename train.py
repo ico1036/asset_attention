@@ -90,10 +90,16 @@ def compute_features(d):
     # Stack: (L, N, F)
     features = torch.stack(feat_list, dim=-1)  # (L, N, F)
 
-    # Z-score normalize per feature (expanding window would be better but keep simple)
-    mean = features.mean(dim=0, keepdim=True)
-    std = features.std(dim=0, keepdim=True) + 1e-8
-    features = (features - mean) / std
+    # Z-score normalize: expanding window (no look-ahead bias)
+    # At each time t, normalize using mean/std from [0, t] only
+    cum_sum = features.cumsum(dim=0)
+    counts = torch.arange(1, T - 199 + 1, device=features.device).float().unsqueeze(-1).unsqueeze(-1)
+    expanding_mean = cum_sum / counts
+    cum_sq = (features ** 2).cumsum(dim=0)
+    expanding_std = ((cum_sq / counts - expanding_mean ** 2).clamp(min=1e-8)).sqrt()
+    # Need at least 20 days for stable stats
+    features[20:] = (features[20:] - expanding_mean[20:]) / (expanding_std[20:] + 1e-8)
+    features[:20] = 0  # not enough history, zero out
 
     return features, ret[start:]  # features and aligned returns
 

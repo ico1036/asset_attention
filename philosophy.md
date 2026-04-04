@@ -25,6 +25,17 @@
 - Loss: -Sharpe, -Sharpe + turnover penalty, CVaR
 - Architecture alternatives: MLP-Mixer, pure temporal-only, pure spatial-only
 
+## Data Integrity
+- **Look-ahead bias**: Only use information available at decision time.
+  - Market-traded prices (VIX, yields, ETF prices): same-day OK (known at close).
+  - Monthly macro (CPI, GDP, unemployment): +30 day publication lag minimum.
+  - Weekly macro (jobless claims): +7 day lag.
+  - Never use future returns in feature computation.
+- **Survivorship bias**: All 17 ETFs still trade today. If adding new assets, verify listing date.
+- **Z-score normalization**: Must be expanding window (train only), never full-sample.
+- **Walk-forward**: Train on past, validate on unseen future. No shuffling. Time order sacred.
+- **Rebalancing cost**: Assume 5bps per turnover as baseline. Turnover penalty in loss reflects this.
+
 ## What NOT to Do
 - No models >25K params
 - No external macro data as input features
