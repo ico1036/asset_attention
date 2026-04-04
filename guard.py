@@ -37,6 +37,18 @@ def check_card(card_path):
     if gap > 1.5:
         issues.append(f"⚠️ GAP: |val-test| = {gap:.2f} > 1.5. Likely overfitting.")
 
+    # Loss curve check
+    loss_curve = results.get("loss_curve", {})
+    train_losses = loss_curve.get("train", [])
+    val_losses = loss_curve.get("val", [])
+    if train_losses and val_losses and len(train_losses) >= 3:
+        # Train not learning?
+        if train_losses[-1] >= train_losses[0]:
+            issues.append(f"❌ TRAIN_LOSS not falling: {train_losses[0]:.3f} → {train_losses[-1]:.3f}. Model not learning.")
+        # Val diverging while train falls?
+        if train_losses[-1] < train_losses[0] and val_losses[-1] > val_losses[len(val_losses)//2]:
+            issues.append(f"⚠️ OVERFIT: train_loss falling but val_loss rising. Early stopping may be too late.")
+
     # Sanity bounds (based on asset allocation literature + benchmarks)
     # Real-world hedge fund Sharpe rarely exceeds 2.0 sustained
     # EW benchmark ~2.76 on this test period (unusually high due to 2020-2026)

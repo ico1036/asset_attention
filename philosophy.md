@@ -24,6 +24,14 @@
 - If training finishes in < 60 seconds, the model is undertrained OR data is too small. Fix it.
 - The agent must detect and fix this autonomously — do not wait for human input.
 
+## Training Diagnostics (MUST check before looking at test)
+- **First look at loss curves, not test Sharpe:**
+  1. train_loss falling? If not → model isn't learning. Fix architecture/lr.
+  2. val_loss falling too? If not → overfitting. Stop here, don't even check test.
+  3. Both converging → THEN look at test_sharpe as final OOS evaluation.
+- Record train_loss and val_loss at [epoch 0, 25%, 50%, 75%, final] in the card.
+- If train_loss falls but val_loss rises → early stopping should have kicked in. Check patience.
+
 ## Overfitting is the Enemy (Lesson from Round 1)
 - val_sharpe↑ while test_sharpe↓ = overfitting. The simplest MLP (692 params) had best test_sharpe (3.94).
 - Primary metric: **test_sharpe** (not val_sharpe). Val is for early stopping only.
