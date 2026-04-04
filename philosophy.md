@@ -13,6 +13,12 @@
 5. **Patching**: Compress days into patches (e.g., 5-day). Reduces sequence length, preserves local patterns.
 6. **Modern building blocks**: RoPE, SwiGLU, RMSNorm — free upgrades from LLM research.
 
+## Complexity Must Be Earned
+- Baseline: Linear (DLinear). If attention can't beat linear, it's not needed.
+- Add complexity one step at a time: Linear → MLP → Single Attention → Dual Attention
+- Each step must show val_sharpe improvement. No improvement = revert to simpler.
+- Ref: "Are Transformers Effective for Time Series Forecasting?" (Zeng 2023, AAAI)
+
 ## What to Explore
 - Attention order: spatial→temporal vs temporal→spatial vs interleaved
 - Patch size: 3, 5, 10 days
