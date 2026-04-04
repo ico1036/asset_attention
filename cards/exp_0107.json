@@ -1,0 +1,54 @@
+{
+  "exp": 107,
+  "timestamp": "2026-04-04T19:58:30.062959",
+  "config": {
+    "model": "LW_MinVar_w500",
+    "n_params": 0,
+    "train_samples": 587,
+    "n_assets": 17,
+    "window": 500
+  },
+  "results": {
+    "val_sharpe": 0.548739184499005,
+    "test_sharpe": 2.868863260551506,
+    "full_sharpe": 1.2183165873791246,
+    "val_ew_sharpe": 0.06613142770514818,
+    "test_ew_sharpe": 1.389812193816464,
+    "ann_return_pct": 2.9132436867803335,
+    "ann_vol_pct": 2.391204155766591,
+    "max_drawdown_pct": -6.196630001068115,
+    "turnover": 0.01520842406898737,
+    "elapsed_sec": 0.3,
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      3.0
+    ],
+    "train_time": [
+      1,
+      30
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f GAP: |val-test| = 2.32 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning."
+  ]
+}

@@ -74,8 +74,19 @@ This ensures continuity. A cron watchdog also runs every 45 minutes as a safety 
 - Do NOT ask the human. Diagnose and fix autonomously.
 
 ## Rules
-- Only modify `train.py`. Never touch `prepare.py`.
-- `train.py` may read any file in `data/` (parquets, tensors, metadata). This is not "modifying prepare.py".
+- Only modify `train.py`. Never touch `prepare.py` or `guard.py`.
+- `train.py` MUST import evaluation functions from `prepare.py`:
+  ```python
+  from prepare import (
+      load_data, make_samples, split_data,
+      lw_cov, minvar_weights, equal_weight,
+      evaluate_and_print, write_card,
+      sharpe, sortino, annualize_return, annualize_vol, max_drawdown,
+      N_ASSETS, REBAL_FREQ, MAX_PARAMS, OBS_PER_YEAR, ANNUALIZE_FACTOR,
+  )
+  ```
+- NEVER redefine sharpe, sortino, MDD, or other metrics in train.py. Use prepare.py's versions.
+- NEVER use `math.sqrt(252)` for annualization. The correct factor is `ANNUALIZE_FACTOR` from prepare.py.
 - Max 25K parameters. Print param count at start.
 - Metric: `val_sharpe` (higher = better). Secondary: `val_mdd` (lower = better).
 - Device: MPS (Apple Silicon). Use `torch.device("mps")`.

@@ -4,8 +4,7 @@
 import subprocess, sys, time, json
 from pathlib import Path
 
-CARDS = Path(__file__).parent / "cards"
-MAX_PARAMS = 25_000
+from prepare import MAX_PARAMS, CARDS
 MIN_TRAIN_TIME = 30  # seconds
 MIN_SAMPLES = 200
 
@@ -43,13 +42,13 @@ def check_card(card_path):
     if gap > 1.5:
         issues.append(f"⚠️ GAP: |val-test| = {gap:.2f} > 1.5. Likely overfitting.")
 
-    # Loss curve check
+    # Loss curve check (skip for analytical methods with no training)
     loss_curve = results.get("loss_curve", {})
     train_losses = loss_curve.get("train", [])
     val_losses = loss_curve.get("val", [])
-    if train_losses and val_losses and len(train_losses) >= 3:
+    if n_params > 0 and train_losses and val_losses and len(train_losses) >= 3:
         # Train not learning?
-        if train_losses[-1] >= train_losses[0]:
+        if train_losses[-1] >= train_losses[0] and train_losses[0] > 0:
             issues.append(f"❌ TRAIN_LOSS not falling: {train_losses[0]:.3f} → {train_losses[-1]:.3f}. Model not learning.")
         # Val diverging while train falls?
         if train_losses[-1] < train_losses[0] and val_losses[-1] > val_losses[len(val_losses)//2]:
@@ -58,8 +57,10 @@ def check_card(card_path):
     # Sanity bounds (based on asset allocation literature + benchmarks)
     # Real-world hedge fund Sharpe rarely exceeds 2.0 sustained
     # EW benchmark ~2.76 on this test period (unusually high due to 2020-2026)
-    SANE_VAL_RANGE = (-0.5, 4.0)
-    SANE_TEST_RANGE = (-0.5, 5.0)
+    # Post-refactor: correct annualization (sqrt(50.4) not sqrt(252))
+    # Real-world Sharpe rarely > 2.0 sustained; EW ~1.3 on test period
+    SANE_VAL_RANGE = (-0.5, 2.5)
+    SANE_TEST_RANGE = (-0.5, 3.5)
     if not (SANE_VAL_RANGE[0] <= val_s <= SANE_VAL_RANGE[1]):
         issues.append(f"🚨 INSANE val_sharpe={val_s:.2f} outside [{SANE_VAL_RANGE[0]}, {SANE_VAL_RANGE[1]}]")
     if not (SANE_TEST_RANGE[0] <= test_s <= SANE_TEST_RANGE[1]):
