@@ -57,7 +57,7 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 - If val-test gap > 1.5: overfitting. Add regularization or reduce model.
 - If val_sharpe > 2.0: suspect bug. Run sanity checks per philosophy.md.
 - If all seeds except one give poor results: seed-dependent, not real alpha.
-- If insights.md says "no further improvement possible" and you agree after review: stop early. Report conclusion. Don't run experiments just to fill the quota.
+- NEVER stop early because "nothing works." If current approach hits a wall, pivot: change the problem formulation, data representation, loss function, or training method. Think creatively. Use all 20 experiments.
 - Do NOT ask the human. Diagnose and fix autonomously.
 
 ## Rules
