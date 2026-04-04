@@ -48,3 +48,21 @@
 - Change: PatchTemporalAllocator, 5-day patches, 12 patches, d_model=16, last-patch pooling
 - val_sharpe: 2.36 | test_sharpe: 1.44 | test_mdd: -2.1% | params: 1,826
 - Verdict: KEEP (big val improvement, temporal > spatial so far)
+
+## Exp 8: Dual attention (temporal → spatial)
+- Hypothesis: Combining temporal patching with spatial cross-asset attention.
+- Change: DualAttentionAllocator, temporal→spatial, d_model=16
+- val_sharpe: 1.47 | test_sharpe: 2.13 | test_mdd: -1.5% | params: 2,626
+- Verdict: DISCARD (spatial layer adds params, overfits)
+
+## Exp 9: PatchTemporal d_model=12, mean-pool, dropout=0.3
+- Hypothesis: Mean-pool captures full temporal context; smaller model reduces overfitting.
+- Change: d_model=12, mean pooling, higher dropout
+- val_sharpe: 1.86 | test_sharpe: 1.44 | test_mdd: -1.8% | params: 1,226
+- Verdict: DISCARD (mean pooling worse than last-patch; smaller d_model hurts)
+
+## Exp 10: PatchTemporal 10-day patches, d_model=20
+- Hypothesis: Larger patches with more capacity per patch.
+- Change: patch_size=10, d_model=20, 6 patches
+- val_sharpe: 1.89 | test_sharpe: 1.06 | test_mdd: -1.9% | params: 3,402
+- Verdict: DISCARD (bigger patches lose granularity, more params overfit)
