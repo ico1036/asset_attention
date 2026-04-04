@@ -1,74 +1,120 @@
 # Asset Attention: MicroAllocator
 
-Dual-Attention Transformer for ETF asset allocation.
+Autonomous research system for ETF asset allocation using AI agents.  
+Inspired by [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) — adapted for portfolio optimization.
 
-## Architecture
-
-**MicroAllocator v2** — ~15-25K parameters, designed for data-scarce regime-aware allocation.
+## System Architecture
 
 ```
-Input: 17 ETFs × 60 days × 10 price-based features
-  ↓
-[Patch Embedding] 60 days → 12 patches (5-day each)
-  ↓
-[Spatial Attention] Feature-to-feature cross-correlation (per patch)
-  ↓
-[Temporal Attention] Patch-to-patch time patterns (per asset)
-  ↓
-[Portfolio Head] Softmax → asset weights
-  ↓
-Loss: -Sharpe + turnover penalty + CVaR
+┌─────────────────────────────────────────────────────────────┐
+│                        HUMAN (주인님)                        │
+│  • Updates philosophy.md / program.md                       │
+│  • Reviews results via main session                         │
+└──────────────┬──────────────────────────┬───────────────────┘
+               │ Out-of-Loop              │ direction
+               │ DreamWalk                │ changes
+               ▼                          │
+┌──────────────────────────┐              │
+│      MAIN SESSION        │◄─────────────┘
+│  • Validates harness      │
+│  • Spawns experiment agent│
+│  • Reports results        │
+└──────────┬───────────────┘
+           │ sessions_spawn
+           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   EXPERIMENT AGENT (isolated)                │
+│                                                             │
+│  ┌─────────┐    ┌──────────────────────────────────────┐   │
+│  │ LOCK    │    │         EXPERIMENT LOOP               │   │
+│  │ create  │───▶│                                      │   │
+│  └─────────┘    │  1. Read insights.md (learned lessons)│   │
+│                 │  2. Self-Diagnosis (check last result) │   │
+│                 │  3. Hypothesis + Expected Range        │   │
+│                 │  4. Modify train.py                    │   │
+│                 │  5. uv run guard.py ◄── HARD CHECKS   │   │
+│                 │     │                                  │   │
+│                 │     ▼                                  │   │
+│                 │  ┌──────────┐  ┌───────────────────┐  │   │
+│                 │  │ train.py │──▶ cards/exp_NNNN.json│  │   │
+│                 │  └──────────┘  └───────┬───────────┘  │   │
+│                 │                        │              │   │
+│                 │     ┌──────────────────▼──────────┐   │   │
+│                 │     │        guard.py             │   │   │
+│                 │     │  • Params ≤ 25K?            │   │   │
+│                 │     │  • Train time reasonable?    │   │   │
+│                 │     │  • Loss curve healthy?       │   │   │
+│                 │     │  • val_sharpe in sane range? │   │   │
+│                 │     │  • IS/OOS gap < 1.5?        │   │   │
+│                 │     │  • Auto verdict: KEEP/DISCARD│   │   │
+│                 │     └──────────────────────────────┘   │   │
+│                 │                                        │   │
+│                 │  6. KEEP → commit & push               │   │
+│                 │     DISCARD → revert train.py          │   │
+│                 │  7. Record in experiments.md            │   │
+│                 │                                        │   │
+│                 │  ┌─────────────────────────────┐       │   │
+│                 │  │ Every 10 exp: IN-LOOP DREAM │       │   │
+│                 │  │  • actual vs expected ranges │       │   │
+│                 │  │  • pattern extraction        │       │   │
+│                 │  │  • update insights.md        │       │   │
+│                 │  └─────────────────────────────┘       │   │
+│                 │                                        │   │
+│                 │  Repeat until 20 exp or early stop     │   │
+│                 └────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────┐                                                │
+│  │ LOCK    │                                                │
+│  │ remove  │                                                │
+│  └─────────┘                                                │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Key Design Choices
+## Key Files
 
-- **End-to-end**: No predict-then-optimize pipeline. Direct data → weights.
-- **Dual Attention**: Spatial (feature cross-correlation) + Temporal (time patterns)
-- **Patching** (PatchTST): 5-day patches reduce sequence length 5×, preserve local patterns
-- **RoPE**: Rotary position embedding for relative temporal encoding
-- **SwiGLU + RMSNorm**: Modern LLM building blocks, free performance gain
-- **Price-based features only**: VIX, credit spread, yield curve, momentum, vol — no lagging macro
+| File | Owner | Purpose |
+|------|-------|---------|
+| `philosophy.md` | Human | Design principles, constraints, what NOT to do |
+| `program.md` | Human | Experiment loop, rules, DreamWalk protocol |
+| `prepare.py` | Fixed | Parquet → raw tensors (one-time) |
+| `train.py` | Agent | Model + features + training (freely modified) |
+| `guard.py` | Fixed | Hard checks that cannot be bypassed |
+| `experiments.md` | Agent | Experiment log with verdicts |
+| `insights.md` | Agent | Distilled learnings from Dream phases |
+| `cards/exp_NNNN.json` | Auto | Full config + results + verdict per experiment |
+| `data/SCHEMA.md` | Fixed | Data schema with column names and lag info |
 
-### Inspired By
+## DreamWalk Protocol
 
-| Paper | Technique Borrowed |
-|-------|--------------------|
-| iTransformer (ICLR 2024) | Variables-as-tokens spatial attention |
-| PatchTST (ICLR 2023) | Time series patching |
-| Crossformer (ICLR 2023) | Two-stage cross-time/cross-variable attention |
-| Signature-Informed Transformer (2026) | End-to-end CVaR, path signature features |
-| Portfolio Transformer (2022) | Direct allocation via attention |
-| DeepSeek V3 | RoPE, SwiGLU, RMSNorm |
+Two types of integrity checks:
 
-### Data
+- **Out-of-Loop**: When harness files change → main session simulates 5 experiments → fixes issues before agent runs
+- **In-Loop**: Every 10 experiments → agent compares actual vs expected → stops if systemic issues found
 
-- **17 ETFs** × ~21 years daily (SPY, QQQ, IWM, EFA, VEA, VWO, EEM, TLT, IEF, SHY, TIP, HYG, GLD, DBC, USO, VNQ, UUP)
-- **10 price-based features**: VIX level, VIX Δ5d, SPY-TLT corr 20d, 10Y-2Y spread, 10Y rate Δ20d, HYG-TLT spread, SPY/200MA, GLD/SPY Δ20d, asset momentum, realized vol 20d
-- Walk-forward validation
+## Guard Checks (Automated)
 
-### Constraints
+1. **Params**: ≤ 25K
+2. **Training time**: Must match expected time for model complexity × data size
+3. **Loss curves**: train_loss must fall; val_loss must not diverge
+4. **Sanity bounds**: val_sharpe ∈ [-0.5, 4.0], test_sharpe ∈ [-0.5, 5.0]
+5. **IS/OOS gap**: |val - test| < 1.5
+6. **Suspicious results**: val_sharpe > 2.0 triggers investigation
 
-- **Mac Mini M4** (32GB unified, 10 GPU cores, Metal/MPS)
-- **~15-25K params** (data ratio ~2-3:1 with regularization)
-- Training target: < 30 min
+## Results (55 experiments, 3 rounds)
+
+**Best model**: MLP + GELU + Noise (692 params, val=1.85, test=4.23)  
+**Benchmark**: Equal Weight Sharpe = 2.76
+
+Key finding: Attention mechanisms do not improve over simple MLP for 17-ETF allocation with ~620 samples. The MLP's apparent alpha is a period-specific defensive tilt (SHY-heavy), not learned cross-asset dynamics.
+
+See `insights.md` for full analysis.
 
 ## Setup
 
 ```bash
 uv sync
-```
-
-## Project Structure
-
-```
-asset_attention/
-├── data/
-│   ├── collect_data.py       # Data collection pipeline
-│   ├── etf_daily.parquet     # 17 ETFs × 21yr daily
-│   ├── macro_daily.parquet   # 12 macro indicators (reference)
-│   └── etf_metadata.json     # Asset class/region metadata
-├── pyproject.toml
-└── README.md
+uv run prepare.py    # one-time data prep
+uv run guard.py      # run experiment through guard checks
 ```
 
 ## License
