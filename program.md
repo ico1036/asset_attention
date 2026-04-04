@@ -21,7 +21,12 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 ## Experiment Loop
 
 1. Read the current `train.py` and `experiments.md` (past results).
-2. Form a hypothesis. Write it as a comment at the top of `train.py`.
+2. Form a hypothesis AND expected range. Write both at the top of `train.py`:
+   ```
+   # Hypothesis: Adding attention should capture cross-asset dynamics
+   # Expected: val_sharpe 1.0-1.5 (vs baseline 0.84), train_time 60-120s
+   # If val_sharpe > 3.0 or < 0.0 or train_time < 30s → investigate before continuing
+   ```
 3. Modify `train.py`. You may change anything: model architecture, optimizer, loss, hyperparameters.
 4. Run: `uv run guard.py` (NOT train.py directly) — this runs train.py + enforces hard checks. Never bypass guard.py.
    Add model-specific details to the config dict in train.py (e.g., n_layers, d_model, n_heads, attention_order).
@@ -70,7 +75,9 @@ When `philosophy.md`, `program.md`, or `prepare.py` changes:
    - If estimated time < 30s: data pipeline or model size needs fixing BEFORE experiments.
    - Check data/param ratio: samples/params < 5 = overfitting guaranteed.
    - Check if val/test split sizes are statistically meaningful (< 50 samples = unreliable).
-4. Fix any issues found before running real experiments.
+4. **Pre-experiment prediction**: For each simulated experiment, predict expected val_sharpe range, training time, and likely failure modes.
+5. **Post-experiment comparison**: After simulated results, check: "Is this within my prediction? If not, why?"
+6. Fix any issues found before running real experiments.
 
 ## Dream Phase (AutoDream)
 

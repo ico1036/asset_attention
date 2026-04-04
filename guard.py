@@ -37,6 +37,19 @@ def check_card(card_path):
     if gap > 1.5:
         issues.append(f"⚠️ GAP: |val-test| = {gap:.2f} > 1.5. Likely overfitting.")
 
+    # Sanity bounds (based on asset allocation literature + benchmarks)
+    # Real-world hedge fund Sharpe rarely exceeds 2.0 sustained
+    # EW benchmark ~2.76 on this test period (unusually high due to 2020-2026)
+    SANE_VAL_RANGE = (-0.5, 4.0)
+    SANE_TEST_RANGE = (-0.5, 5.0)
+    if not (SANE_VAL_RANGE[0] <= val_s <= SANE_VAL_RANGE[1]):
+        issues.append(f"🚨 INSANE val_sharpe={val_s:.2f} outside [{SANE_VAL_RANGE[0]}, {SANE_VAL_RANGE[1]}]")
+    if not (SANE_TEST_RANGE[0] <= test_s <= SANE_TEST_RANGE[1]):
+        issues.append(f"🚨 INSANE test_sharpe={test_s:.2f} outside [{SANE_TEST_RANGE[0]}, {SANE_TEST_RANGE[1]}]")
+
+    # Complexity step check: improvement > 100% over previous best is suspicious
+    # (legitimate improvements are usually incremental)
+
     # Auto verdict
     prev_best = None
     for p in sorted(CARDS.glob("exp_*.json")):
