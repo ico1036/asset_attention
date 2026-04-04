@@ -1,0 +1,168 @@
+{
+  "exp": 97,
+  "timestamp": "2026-04-04T18:47:34.486232",
+  "config": {
+    "model": "ResidualML_on_MinVar",
+    "n_params": 465,
+    "train_samples": 593,
+    "n_assets": 17,
+    "n_features": 10
+  },
+  "results": {
+    "val_sharpe": 1.2129,
+    "test_sharpe": 4.9114,
+    "elapsed_sec": 67.1,
+    "all_results": {
+      "MinVar_base": {
+        "val_sharpe": 1.108,
+        "test_sharpe": 6.5698,
+        "params": 0
+      },
+      "delta0.02_h8": {
+        "val_sharpe": 1.0658,
+        "test_sharpe": 6.2478,
+        "params": 241,
+        "seeds": [
+          [
+            0.913,
+            6.335
+          ],
+          [
+            1.159,
+            6.395
+          ],
+          [
+            1.125,
+            6.013
+          ]
+        ]
+      },
+      "delta0.05_h8": {
+        "val_sharpe": 1.0011,
+        "test_sharpe": 5.8355,
+        "params": 241,
+        "seeds": [
+          [
+            0.654,
+            5.996
+          ],
+          [
+            1.233,
+            6.211
+          ],
+          [
+            1.117,
+            5.3
+          ]
+        ]
+      },
+      "delta0.05_h16": {
+        "val_sharpe": 1.1274,
+        "test_sharpe": 6.0985,
+        "params": 465,
+        "seeds": [
+          [
+            1.343,
+            6.354
+          ],
+          [
+            0.991,
+            5.938
+          ],
+          [
+            1.049,
+            6.003
+          ]
+        ]
+      },
+      "delta0.10_h8": {
+        "val_sharpe": 0.8559,
+        "test_sharpe": 5.1734,
+        "params": 241,
+        "seeds": [
+          [
+            0.223,
+            5.301
+          ],
+          [
+            1.275,
+            5.715
+          ],
+          [
+            1.069,
+            4.503
+          ]
+        ]
+      },
+      "delta0.10_h16": {
+        "val_sharpe": 1.1611,
+        "test_sharpe": 5.6303,
+        "params": 465,
+        "seeds": [
+          [
+            1.593,
+            6.073
+          ],
+          [
+            0.892,
+            5.334
+          ],
+          [
+            0.998,
+            5.484
+          ]
+        ]
+      },
+      "delta0.20_h16": {
+        "val_sharpe": 1.2129,
+        "test_sharpe": 4.9114,
+        "params": 465,
+        "seeds": [
+          [
+            1.947,
+            5.402
+          ],
+          [
+            0.756,
+            4.539
+          ],
+          [
+            0.936,
+            4.793
+          ]
+        ]
+      }
+    },
+    "loss_curve": {
+      "train": [
+        4.561,
+        5.048,
+        5.399,
+        5.741,
+        5.902
+      ],
+      "val": [
+        0.936,
+        0.738,
+        0.542,
+        0.394,
+        0.306
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      30,
+      300
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f GAP: |val-test| = 3.70 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 4.561 \u2192 5.902. Model not learning."
+  ]
+}

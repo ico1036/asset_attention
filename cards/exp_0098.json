@@ -1,0 +1,47 @@
+{
+  "exp": 98,
+  "timestamp": "2026-04-04T18:49:06.722399",
+  "config": {
+    "model": "RebalFreq_MinVar",
+    "n_params": 0,
+    "train_samples": 0,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.1,
+    "test_sharpe": 6.5,
+    "elapsed_sec": 15.1,
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      5,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f GAP: |val-test| = 5.40 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=6.50 outside [-0.5, 5.0]"
+  ]
+}

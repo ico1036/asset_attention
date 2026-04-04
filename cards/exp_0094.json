@@ -1,0 +1,102 @@
+{
+  "exp": 94,
+  "timestamp": "2026-04-04T18:42:44.703642",
+  "config": {
+    "model": "Constrained_LW_MinVar",
+    "n_params": 0,
+    "train_samples": 594,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 3.5546,
+    "test_sharpe": 4.2769,
+    "elapsed_sec": 39.0,
+    "all_results": {
+      "LW_w250": {
+        "val_sharpe": 0.8005,
+        "test_sharpe": 6.1791,
+        "mdd": -0.0044,
+        "turnover": 0.0235
+      },
+      "LW_w500_hl250": {
+        "val_sharpe": 1.108,
+        "test_sharpe": 6.5698,
+        "mdd": -0.004,
+        "turnover": 0.0173
+      },
+      "LW_expanding_hl500": {
+        "val_sharpe": 0.4024,
+        "test_sharpe": 7.8384,
+        "mdd": -0.0023,
+        "turnover": 0.0066
+      },
+      "LW_w250_max20": {
+        "val_sharpe": -0.559,
+        "test_sharpe": 2.7601,
+        "mdd": -0.0104,
+        "turnover": 0.0538
+      },
+      "LW_w500_hl250_max20": {
+        "val_sharpe": 0.1958,
+        "test_sharpe": 3.7535,
+        "mdd": -0.0104,
+        "turnover": 0.0266
+      },
+      "LW_exp_hl500_max20": {
+        "val_sharpe": -0.3894,
+        "test_sharpe": 3.078,
+        "mdd": -0.0104,
+        "turnover": 0.0356
+      },
+      "LW_w500_hl250_max15": {
+        "val_sharpe": 0.3677,
+        "test_sharpe": 3.5419,
+        "mdd": -0.0085,
+        "turnover": 0.0168
+      },
+      "LW_w500_hl250_min1": {
+        "val_sharpe": 3.5546,
+        "test_sharpe": 4.2769,
+        "mdd": -0.009,
+        "turnover": 0.0162
+      },
+      "LW_w500_hl250_25_1": {
+        "val_sharpe": -0.3634,
+        "test_sharpe": 4.6479,
+        "mdd": -0.0049,
+        "turnover": 0.0044
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.3,
+      1.5
+    ],
+    "train_time": [
+      1,
+      60
+    ]
+  },
+  "verdict": "KEEP",
+  "issues": [
+    "\u26a0\ufe0f SUSPICIOUS val_sharpe=3.55 > 2.0. Check for bugs/look-ahead bias.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning."
+  ]
+}

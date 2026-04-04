@@ -1,0 +1,120 @@
+{
+  "exp": 93,
+  "timestamp": "2026-04-04T18:41:23.825861",
+  "config": {
+    "model": "VeryLongWindow_LW_MinVar",
+    "n_params": 0,
+    "train_samples": 594,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.0198,
+    "test_sharpe": 8.732,
+    "elapsed_sec": 38.1,
+    "benchmark_equal_weight_sharpe": 3.0305,
+    "all_results": {
+      "LW_w250": {
+        "val_sharpe": 0.8005,
+        "test_sharpe": 6.1791,
+        "mdd": -0.0044,
+        "turnover": 0.0235
+      },
+      "LW_w500_hl250": {
+        "val_sharpe": 1.108,
+        "test_sharpe": 6.5698,
+        "mdd": -0.004,
+        "turnover": 0.0173
+      },
+      "LW_w750": {
+        "val_sharpe": 0.7517,
+        "test_sharpe": 7.2447,
+        "mdd": -0.0034,
+        "turnover": 0.0117
+      },
+      "LW_w750_hl250": {
+        "val_sharpe": 0.9006,
+        "test_sharpe": 7.1852,
+        "mdd": -0.0035,
+        "turnover": 0.0145
+      },
+      "LW_w1000": {
+        "val_sharpe": 0.4854,
+        "test_sharpe": 6.7262,
+        "mdd": -0.0031,
+        "turnover": 0.0103
+      },
+      "LW_w1000_hl250": {
+        "val_sharpe": 0.8432,
+        "test_sharpe": 7.3362,
+        "mdd": -0.0033,
+        "turnover": 0.0139
+      },
+      "LW_w1000_hl500": {
+        "val_sharpe": 0.6618,
+        "test_sharpe": 7.2703,
+        "mdd": -0.003,
+        "turnover": 0.0113
+      },
+      "LW_expanding": {
+        "val_sharpe": 0.0198,
+        "test_sharpe": 8.732,
+        "mdd": -0.0014,
+        "turnover": 0.0007
+      },
+      "LW_expanding_hl250": {
+        "val_sharpe": 0.7789,
+        "test_sharpe": 7.6548,
+        "mdd": -0.0029,
+        "turnover": 0.0127
+      },
+      "LW_expanding_hl500": {
+        "val_sharpe": 0.4024,
+        "test_sharpe": 7.8384,
+        "mdd": -0.0023,
+        "turnover": 0.0066
+      },
+      "LW_expanding_hl1000": {
+        "val_sharpe": 0.0875,
+        "test_sharpe": 8.1451,
+        "mdd": -0.0019,
+        "turnover": 0.0029
+      },
+      "EqualWeight": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      1,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f GAP: |val-test| = 8.71 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=8.73 outside [-0.5, 5.0]"
+  ]
+}

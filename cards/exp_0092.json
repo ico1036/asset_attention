@@ -1,0 +1,109 @@
+{
+  "exp": 92,
+  "timestamp": "2026-04-04T18:40:05.101235",
+  "config": {
+    "model": "DecayWeighted_LW_MinVar",
+    "n_params": 0,
+    "train_samples": 594,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.108,
+    "test_sharpe": 6.5698,
+    "elapsed_sec": 5.7,
+    "benchmark_equal_weight_sharpe": 3.0305,
+    "all_results": {
+      "LW_w250_uniform": {
+        "val_sharpe": 0.8005,
+        "test_sharpe": 6.1791,
+        "mdd": -0.0044,
+        "turnover": 0.0235
+      },
+      "LW_w250_hl30": {
+        "val_sharpe": 0.9006,
+        "test_sharpe": 5.4289,
+        "mdd": -0.005,
+        "turnover": 0.0518
+      },
+      "LW_w250_hl60": {
+        "val_sharpe": 0.8257,
+        "test_sharpe": 5.879,
+        "mdd": -0.0048,
+        "turnover": 0.0332
+      },
+      "LW_w250_hl120": {
+        "val_sharpe": 0.7866,
+        "test_sharpe": 6.0848,
+        "mdd": -0.0046,
+        "turnover": 0.025
+      },
+      "LW_w250_hl180": {
+        "val_sharpe": 0.7866,
+        "test_sharpe": 6.1397,
+        "mdd": -0.0045,
+        "turnover": 0.0236
+      },
+      "LW_w500_uniform": {
+        "val_sharpe": 1.2097,
+        "test_sharpe": 6.5209,
+        "mdd": -0.0039,
+        "turnover": 0.0182
+      },
+      "LW_w500_hl60": {
+        "val_sharpe": 0.767,
+        "test_sharpe": 5.9694,
+        "mdd": -0.0048,
+        "turnover": 0.0332
+      },
+      "LW_w500_hl120": {
+        "val_sharpe": 0.8826,
+        "test_sharpe": 6.3744,
+        "mdd": -0.0043,
+        "turnover": 0.0223
+      },
+      "LW_w500_hl250": {
+        "val_sharpe": 1.108,
+        "test_sharpe": 6.5698,
+        "mdd": -0.004,
+        "turnover": 0.0173
+      },
+      "EqualWeight": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      1,
+      60
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 6s vs expected ~30s for 0 params \u00d7 594 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 5.46 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=6.57 outside [-0.5, 5.0]"
+  ]
+}

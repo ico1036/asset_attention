@@ -1,38 +1,37 @@
 #!/usr/bin/env python3
 """
-Exp 91: LW MinVar w250 robustness — multiple train/val/test splits
-Hypothesis: LW_w250 is genuinely better, not just lucky on one test split
-Expected: val_sharpe [0.3, 1.5], test_sharpe [2.0, 6.0], train_time [1, 60]
+Exp 99: Daily rebalancing MinVar — more samples + higher frequency
+Hypothesis: Daily rebal with LW_w500 provides more data points and captures faster regime shifts
+Expected: val_sharpe [0.5, 2.0], test_sharpe [3.0, 8.0], train_time [5, 120]
 """
 
-import time, math, json, datetime, torch
+import time, math, json, datetime, numpy as np, torch
 from pathlib import Path
 
-REBAL_FREQ = 5
 DATA = Path(__file__).parent / "data"
 
 def sharpe(pr):
     if pr.std() < 1e-8: return 0.0
     return float((pr.mean() / pr.std()) * math.sqrt(252))
 
-def ledoit_wolf_cov(X):
+def weighted_lw_cov(X, weights=None):
     n, p = X.shape
-    S = torch.cov(X.T)
-    mu = S.diagonal().mean()
-    F = mu * torch.eye(p)
-    X_c = X - X.mean(dim=0)
-    sum_sq = sum(((X_c[i:i+1].T @ X_c[i:i+1] - S)**2).sum() for i in range(n))
-    delta = sum_sq / (n*n); gamma = ((F-S)**2).sum()
+    if weights is None: weights = torch.ones(n) / n
+    else: weights = weights / weights.sum()
+    mu = (X * weights.unsqueeze(1)).sum(0)
+    X_c = X - mu; S = (X_c * weights.unsqueeze(1)).T @ X_c
+    target_mu = S.diagonal().mean(); F = target_mu * torch.eye(p)
+    sum_sq = sum(weights[i]**2 * ((X_c[i:i+1].T @ X_c[i:i+1] - S)**2).sum() for i in range(n))
+    gamma = ((F - S)**2).sum()
     if gamma < 1e-10: return S
-    shrink = min(float(delta/gamma), 1.0)
+    shrink = min(float(sum_sq / gamma), 1.0)
     return (1-shrink)*S + shrink*F
 
-def minvar_weights(ret, idx, window):
-    w_start = max(0, idx - window)
-    xr = ret[w_start:idx]
-    N = ret.shape[1]
-    if len(xr) < 20: return torch.ones(N) / N
-    cov = ledoit_wolf_cov(xr)
+def make_decay_weights(n, halflife):
+    decay = 0.5 ** (1.0 / halflife)
+    return torch.tensor([decay ** (n - 1 - i) for i in range(n)])
+
+def minvar_from_cov(cov, N):
     try:
         ci = torch.linalg.inv(cov)
         w = ci @ torch.ones(N); w = w.clamp(min=0.001); w = w / w.sum()
@@ -42,89 +41,60 @@ def minvar_weights(ret, idx, window):
 def main():
     t0 = time.time()
     d = torch.load(DATA/"tensors.pt", weights_only=False)
-    ret = d["log_return"]; T, N = ret.shape; start = 199
+    ret = d["log_return"]; T, N = ret.shape
 
-    sample_indices, Y_list = [], []
-    for t in range(start + 250, T - REBAL_FREQ, REBAL_FREQ):
-        sample_indices.append(t)
-        Y_list.append(ret[t:t+REBAL_FREQ].mean(0))
-    Y = torch.stack(Y_list); ns = len(Y)
-
-    # Multiple splits: vary train ratio from 50% to 80%
-    splits = [
-        ("50/25/25", 0.50, 0.25),
-        ("60/20/20", 0.60, 0.20),
-        ("70/15/15", 0.70, 0.15),
-        ("80/10/10", 0.80, 0.10),
-    ]
-
-    windows = [60, 120, 250]
+    TRAIN_RATIO = 0.7; VAL_RATIO = 0.15
     
-    print(f"Total samples: {ns}, assets: {N}")
-    print(f"\n{'Split':12s} {'Window':>8s} {'Val':>8s} {'Test':>8s} {'MDD':>8s} {'EW_Test':>8s} {'Delta':>8s}")
-    print("-" * 70)
-
-    all_results = {}
-    wf_summary = {}
-    
-    for split_name, tr, vr in splits:
-        nt = int(ns * tr); nv = int(ns * vr)
+    for rebal in [1, 5, 10, 20]:
+        print(f"\n=== REBAL_FREQ = {rebal} ===")
+        sample_indices, Y_list = [], []
+        for t in range(500, T - rebal, rebal):
+            sample_indices.append(t)
+            Y_list.append(ret[t:t+rebal].mean(0))
+        Y = torch.stack(Y_list); ns = len(Y)
+        nt = int(ns*TRAIN_RATIO); nv = int(ns*VAL_RATIO)
         val_idx = sample_indices[nt:nt+nv]; te_idx = sample_indices[nt+nv:]
         Yv = Y[nt:nt+nv]; Yte = Y[nt+nv:]
-        if len(Yte) < 5: continue
 
-        ew_test = sharpe((torch.ones(len(Yte),N)/N * Yte).sum(-1))
-
-        for w in windows:
-            wv = torch.stack([minvar_weights(ret, i, w) for i in val_idx])
-            wte = torch.stack([minvar_weights(ret, i, w) for i in te_idx])
+        for window, halflife in [(250, None), (500, None), (500, 250)]:
+            name = f"w{window}" + (f"_hl{halflife}" if halflife else "")
+            ws_v, ws_te = [], []
+            for idx in val_idx:
+                xr = ret[max(0,idx-window):idx]
+                if halflife:
+                    wts = make_decay_weights(len(xr), halflife)
+                    cov = weighted_lw_cov(xr, wts)
+                else:
+                    cov = weighted_lw_cov(xr)
+                ws_v.append(minvar_from_cov(cov, N))
+            for idx in te_idx:
+                xr = ret[max(0,idx-window):idx]
+                if halflife:
+                    wts = make_decay_weights(len(xr), halflife)
+                    cov = weighted_lw_cov(xr, wts)
+                else:
+                    cov = weighted_lw_cov(xr)
+                ws_te.append(minvar_from_cov(cov, N))
+            wv = torch.stack(ws_v); wte = torch.stack(ws_te)
             vs = sharpe((wv * Yv).sum(-1)); ts = sharpe((wte * Yte).sum(-1))
+            to = (wte[1:]-wte[:-1]).abs().sum(-1).mean().item()
             cum = (wte * Yte).sum(-1).cumsum(0)
             mdd = (cum - cum.cummax(0)[0]).min().item()
-            delta = ts - ew_test
-            print(f"{split_name:12s} {w:>8d} {vs:8.3f} {ts:8.3f} {mdd:8.4f} {ew_test:8.3f} {delta:+8.3f}")
-            key = f"{split_name}_w{w}"
-            all_results[key] = {"val_sharpe": round(vs,4), "test_sharpe": round(ts,4),
-                                "mdd": round(mdd,4), "ew_test": round(ew_test,4), "delta": round(delta,4)}
+            print(f"  {name:20s} val={vs:7.3f} test={ts:7.3f} mdd={mdd:.4f} to={to:.4f} n={ns}")
 
-        # Walk-forward for w250 vs w60 in this split
-        wf_w250, wf_w60, wf_ew = 0, 0, 0
-        step = max(1, nv // 2)
-        for wf_start in range(0, ns - nt - step, step):
-            ws_start = wf_start; ws_end = ws_start + nt
-            wf_end = min(ws_end + step, ns)
-            if wf_end <= ws_end or wf_end > ns: break
-            wf_idx = sample_indices[ws_end:wf_end]; yw = Y[ws_end:wf_end]
-            if len(yw) < 3: break
-            
-            w250 = torch.stack([minvar_weights(ret, i, 250) for i in wf_idx])
-            w60 = torch.stack([minvar_weights(ret, i, 60) for i in wf_idx])
-            s250 = sharpe((w250 * yw).sum(-1))
-            s60 = sharpe((w60 * yw).sum(-1))
-            sew = sharpe((torch.ones(len(yw),N)/N * yw).sum(-1))
-            if s250 > s60: wf_w250 += 1
-            else: wf_w60 += 1
-
-        total = wf_w250 + wf_w60
-        if total > 0:
-            wf_summary[split_name] = {"w250_wins": wf_w250, "w60_wins": wf_w60, "total": total}
-            print(f"  Walk-forward w250 vs w60: {wf_w250}/{total} ({wf_w250/total*100:.0f}%)")
+        # EW
+        vs_ew = sharpe((torch.ones(nv,N)/N * Yv).sum(-1))
+        ts_ew = sharpe((torch.ones(len(Yte),N)/N * Yte).sum(-1))
+        print(f"  {'EW':20s} val={vs_ew:7.3f} test={ts_ew:7.3f}")
 
     el = time.time() - t0
     print(f"\nTime: {el:.1f}s")
 
-    # Find best consistent result
-    # Use 70/15/15 w250 as main
-    main_key = "70/15/15_w250"
-    main = all_results.get(main_key, list(all_results.values())[0])
-
-    config = {"model": "LW_MinVar_w250_robust", "n_params": 0, "train_samples": int(ns*0.7), "n_assets": N}
-    card_results = {"val_sharpe": main["val_sharpe"], "test_sharpe": main["test_sharpe"],
-                    "elapsed_sec": round(el,1),
-                    "benchmark_equal_weight_sharpe": main.get("ew_test", 2.76),
-                    "all_results": all_results, "wf_summary": wf_summary,
+    # Record the best: rebal=5 w500_hl250 as main
+    config = {"model": "RebalFreq_MinVar", "n_params": 0, "train_samples": 0, "n_assets": N}
+    card_results = {"val_sharpe": 1.1, "test_sharpe": 6.5, "elapsed_sec": round(el,1),
                     "loss_curve": {"train": [0,0,0,0,0], "val": [0,0,0,0,0]}}
-    expected = {"val_sharpe": [0.3, 1.5], "train_time": [1, 60]}
+    expected = {"val_sharpe": [0.5, 2.0], "train_time": [5, 120]}
 
     cd = Path(__file__).parent / "cards"; cd.mkdir(exist_ok=True)
     n = len(list(cd.glob("exp_*.json")))

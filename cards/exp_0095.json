@@ -1,0 +1,132 @@
+{
+  "exp": 95,
+  "timestamp": "2026-04-04T18:44:44.202646",
+  "config": {
+    "model": "Regularized_LW_MinVar",
+    "n_params": 0,
+    "train_samples": 594,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.2465,
+    "test_sharpe": 3.4746,
+    "elapsed_sec": 79.4,
+    "all_results": {
+      "LW_w500_hl250": {
+        "val_sharpe": 1.108,
+        "test_sharpe": 6.5698,
+        "mdd": -0.004,
+        "max_weight": 0.5372,
+        "hhi": 0.2639
+      },
+      "LW_w500_ent0.001": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "max_weight": 0.0588,
+        "hhi": 0.0588
+      },
+      "LW_w500_ent0.005": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "max_weight": 0.0588,
+        "hhi": 0.0588
+      },
+      "LW_w500_ent0.01": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "max_weight": 0.0588,
+        "hhi": 0.0588
+      },
+      "LW_w500_ent0.05": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "max_weight": 0.0588,
+        "hhi": 0.0588
+      },
+      "LW_w500_ent0.1": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "max_weight": 0.0588,
+        "hhi": 0.0588
+      },
+      "LW_w500_l2_0.001": {
+        "val_sharpe": 0.2465,
+        "test_sharpe": 3.4746,
+        "mdd": -0.012,
+        "max_weight": 0.3768,
+        "hhi": 0.1431
+      },
+      "LW_w500_l2_0.01": {
+        "val_sharpe": 0.0592,
+        "test_sharpe": 3.0173,
+        "mdd": -0.0164,
+        "max_weight": 0.1189,
+        "hhi": 0.0603
+      },
+      "LW_w500_l2_0.1": {
+        "val_sharpe": 0.2124,
+        "test_sharpe": 3.033,
+        "mdd": -0.0166,
+        "max_weight": 0.0614,
+        "hhi": 0.0588
+      },
+      "LW_w500_ent01_l201": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "max_weight": 0.0588,
+        "hhi": 0.0588
+      },
+      "LW_w750_ent0.01": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "max_weight": 0.0588,
+        "hhi": 0.0588
+      },
+      "LW_exp_hl500_ent01": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "max_weight": 0.0588,
+        "hhi": 0.0588
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      1,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f GAP: |val-test| = 3.23 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning."
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "exp": 96,
+  "timestamp": "2026-04-04T18:45:31.501680",
+  "config": {
+    "model": "Blended_MinVar_EW",
+    "n_params": 0,
+    "train_samples": 594,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.8836,
+    "test_sharpe": 5.7587,
+    "elapsed_sec": 1.8,
+    "all_results": {
+      "Blend_a0.00": {
+        "val_sharpe": 0.2161,
+        "test_sharpe": 3.0305,
+        "mdd": -0.0167,
+        "ann_vol_pct": 3.91
+      },
+      "Blend_a0.50": {
+        "val_sharpe": 0.4121,
+        "test_sharpe": 3.8604,
+        "mdd": -0.0097,
+        "ann_vol_pct": 2.33
+      },
+      "Blend_a0.60": {
+        "val_sharpe": 0.4851,
+        "test_sharpe": 4.1641,
+        "mdd": -0.0083,
+        "ann_vol_pct": 2.02
+      },
+      "Blend_a0.70": {
+        "val_sharpe": 0.581,
+        "test_sharpe": 4.5581,
+        "mdd": -0.0069,
+        "ann_vol_pct": 1.72
+      },
+      "Blend_a0.80": {
+        "val_sharpe": 0.7096,
+        "test_sharpe": 5.0779,
+        "mdd": -0.0056,
+        "ann_vol_pct": 1.43
+      },
+      "Blend_a0.85": {
+        "val_sharpe": 0.7901,
+        "test_sharpe": 5.3969,
+        "mdd": -0.005,
+        "ann_vol_pct": 1.29
+      },
+      "Blend_a0.90": {
+        "val_sharpe": 0.8836,
+        "test_sharpe": 5.7587,
+        "mdd": -0.0045,
+        "ann_vol_pct": 1.16
+      },
+      "Blend_a0.95": {
+        "val_sharpe": 0.9902,
+        "test_sharpe": 6.1574,
+        "mdd": -0.0042,
+        "ann_vol_pct": 1.04
+      },
+      "Blend_a1.00": {
+        "val_sharpe": 1.108,
+        "test_sharpe": 6.5698,
+        "mdd": -0.004,
+        "ann_vol_pct": 0.93
+      },
+      "VolTarget_2%": {
+        "val_sharpe": 1.6322,
+        "test_sharpe": 6.4982,
+        "mdd": -0.0042,
+        "ann_vol_pct": 1.03
+      },
+      "VolTarget_3%": {
+        "val_sharpe": 1.6322,
+        "test_sharpe": 6.4982,
+        "mdd": -0.0063,
+        "ann_vol_pct": 1.54
+      },
+      "VolTarget_4%": {
+        "val_sharpe": 1.6351,
+        "test_sharpe": 6.4982,
+        "mdd": -0.0084,
+        "ann_vol_pct": 2.05
+      },
+      "VolTarget_5%": {
+        "val_sharpe": 1.6042,
+        "test_sharpe": 6.4147,
+        "mdd": -0.0104,
+        "ann_vol_pct": 2.49
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      1,
+      30
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 2s vs expected ~30s for 0 params \u00d7 594 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 4.88 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=5.76 outside [-0.5, 5.0]"
+  ]
+}
