@@ -1,0 +1,100 @@
+{
+  "exp": 102,
+  "timestamp": "2026-04-04T18:52:28.584376",
+  "config": {
+    "model": "Oracle_ShrinkSweep",
+    "n_params": 0,
+    "train_samples": 587,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.3198,
+    "test_sharpe": 6.2551,
+    "elapsed_sec": 0.8,
+    "all_results": {
+      "LW_MinVar_w500": {
+        "val_sharpe": 1.3198,
+        "test_sharpe": 6.2551,
+        "mdd": -0.0038
+      },
+      "MinVar_lookahead": {
+        "val_sharpe": 1.0265,
+        "test_sharpe": 5.5781,
+        "mdd": -0.0053
+      },
+      "FixedShrink_0.0": {
+        "val_sharpe": -1.0926,
+        "test_sharpe": 5.0737,
+        "mdd": -0.0023
+      },
+      "FixedShrink_0.1": {
+        "val_sharpe": 1.1361,
+        "test_sharpe": 5.177,
+        "mdd": -0.0054
+      },
+      "FixedShrink_0.3": {
+        "val_sharpe": 0.6161,
+        "test_sharpe": 4.9086,
+        "mdd": -0.0063
+      },
+      "FixedShrink_0.5": {
+        "val_sharpe": 0.1737,
+        "test_sharpe": 4.1314,
+        "mdd": -0.0082
+      },
+      "FixedShrink_0.7": {
+        "val_sharpe": -0.0277,
+        "test_sharpe": 3.5364,
+        "mdd": -0.0109
+      },
+      "FixedShrink_0.9": {
+        "val_sharpe": 0.1176,
+        "test_sharpe": 3.0747,
+        "mdd": -0.016
+      },
+      "FixedShrink_1.0": {
+        "val_sharpe": 0.308,
+        "test_sharpe": 2.8851,
+        "mdd": -0.02
+      },
+      "EqualWeight": {
+        "val_sharpe": 0.308,
+        "test_sharpe": 2.8851,
+        "mdd": -0.02
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      5,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 1s vs expected ~30s for 0 params \u00d7 587 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 4.94 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=6.26 outside [-0.5, 5.0]"
+  ]
+}

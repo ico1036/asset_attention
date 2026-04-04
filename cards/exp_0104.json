@@ -1,0 +1,146 @@
+{
+  "exp": 104,
+  "timestamp": "2026-04-04T18:54:29.944791",
+  "config": {
+    "model": "MeanVar_BL_Sortino",
+    "n_params": 0,
+    "train_samples": 587,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.3198,
+    "test_sharpe": 6.2551,
+    "elapsed_sec": 7.5,
+    "all_results": {
+      "LW_MinVar_w500": {
+        "val_sharpe": 1.3198,
+        "test_sharpe": 6.2551,
+        "mdd": -0.0038,
+        "turnover": 0.0185
+      },
+      "MV_s0.0_g1": {
+        "val_sharpe": 1.1957,
+        "test_sharpe": 3.9963,
+        "mdd": -0.0099,
+        "turnover": 0.0802
+      },
+      "MV_s0.0_g5": {
+        "val_sharpe": 1.1951,
+        "test_sharpe": 3.9957,
+        "mdd": -0.0099,
+        "turnover": 0.0802
+      },
+      "MV_s0.0_g10": {
+        "val_sharpe": 1.1942,
+        "test_sharpe": 3.995,
+        "mdd": -0.0099,
+        "turnover": 0.0801
+      },
+      "MV_s0.3_g5": {
+        "val_sharpe": 1.6161,
+        "test_sharpe": 4.5921,
+        "mdd": -0.0072,
+        "turnover": 0.0749
+      },
+      "MV_s0.5_g5": {
+        "val_sharpe": 1.8852,
+        "test_sharpe": 4.7417,
+        "mdd": -0.0057,
+        "turnover": 0.0788
+      },
+      "MV_s0.7_g5": {
+        "val_sharpe": 1.8493,
+        "test_sharpe": 4.2669,
+        "mdd": -0.0048,
+        "turnover": 0.0875
+      },
+      "MV_s0.9_g5": {
+        "val_sharpe": 1.632,
+        "test_sharpe": 3.0497,
+        "mdd": -0.0096,
+        "turnover": 0.0993
+      },
+      "BL_tau0.01": {
+        "val_sharpe": 0.308,
+        "test_sharpe": 2.8851,
+        "mdd": -0.02,
+        "turnover": 0.0
+      },
+      "BL_tau0.05": {
+        "val_sharpe": 0.308,
+        "test_sharpe": 2.8851,
+        "mdd": -0.02,
+        "turnover": 0.0
+      },
+      "BL_tau0.1": {
+        "val_sharpe": 0.308,
+        "test_sharpe": 2.8851,
+        "mdd": -0.02,
+        "turnover": 0.0
+      },
+      "BL_tau0.5": {
+        "val_sharpe": 0.308,
+        "test_sharpe": 2.8852,
+        "mdd": -0.02,
+        "turnover": 0.0
+      },
+      "Sortino_w250": {
+        "val_sharpe": -0.4253,
+        "test_sharpe": 3.5133,
+        "mdd": -0.0087,
+        "turnover": 0.0106
+      },
+      "Sortino_w500": {
+        "val_sharpe": -0.2526,
+        "test_sharpe": 3.4609,
+        "mdd": -0.0102,
+        "turnover": 0.006
+      },
+      "Blend_MV_Sort": {
+        "val_sharpe": 0.2787,
+        "test_sharpe": 4.3851,
+        "mdd": -0.007,
+        "turnover": 0.0104
+      },
+      "EqualWeight": {
+        "val_sharpe": 0.308,
+        "test_sharpe": 2.8851,
+        "mdd": -0.02,
+        "turnover": 0.0
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.3,
+      1.5
+    ],
+    "train_time": [
+      1,
+      30
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 8s vs expected ~30s for 0 params \u00d7 587 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 4.94 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=6.26 outside [-0.5, 5.0]"
+  ]
+}

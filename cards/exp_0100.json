@@ -1,0 +1,125 @@
+{
+  "exp": 100,
+  "timestamp": "2026-04-04T18:51:07.043138",
+  "config": {
+    "model": "VolTarget_Drift_MinVar",
+    "n_params": 0,
+    "train_samples": 587,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.8441,
+    "test_sharpe": 5.9547,
+    "elapsed_sec": 2.3,
+    "all_results": {
+      "LW_w500": {
+        "val_sharpe": 1.3198,
+        "test_sharpe": 6.2551,
+        "mdd": -0.0038,
+        "turnover": 0.0185,
+        "avg_leverage": 1.0
+      },
+      "Drift_5%": {
+        "val_sharpe": 1.3534,
+        "test_sharpe": 6.2518,
+        "mdd": -0.0038,
+        "turnover": 0.0116,
+        "avg_leverage": 1.0
+      },
+      "Drift_3%": {
+        "val_sharpe": 1.3405,
+        "test_sharpe": 6.2787,
+        "mdd": -0.0038,
+        "turnover": 0.0138,
+        "avg_leverage": 1.0
+      },
+      "VolTarget_2%": {
+        "val_sharpe": 1.8064,
+        "test_sharpe": 5.979,
+        "mdd": -0.0044,
+        "turnover": 0.0606,
+        "avg_leverage": 1.104
+      },
+      "VolTarget_3%": {
+        "val_sharpe": 1.8064,
+        "test_sharpe": 5.979,
+        "mdd": -0.0065,
+        "turnover": 0.0909,
+        "avg_leverage": 1.656
+      },
+      "VT2_Drift5": {
+        "val_sharpe": 1.8441,
+        "test_sharpe": 5.9547,
+        "mdd": -0.0044,
+        "turnover": 0.0607,
+        "avg_leverage": 1.1
+      },
+      "VT2_Drift3": {
+        "val_sharpe": 1.8211,
+        "test_sharpe": 5.9904,
+        "mdd": -0.0044,
+        "turnover": 0.059,
+        "avg_leverage": 1.102
+      },
+      "VT3_Drift5": {
+        "val_sharpe": 1.8441,
+        "test_sharpe": 5.9547,
+        "mdd": -0.0066,
+        "turnover": 0.091,
+        "avg_leverage": 1.65
+      },
+      "VT3_Drift3": {
+        "val_sharpe": 1.8211,
+        "test_sharpe": 5.9904,
+        "mdd": -0.0066,
+        "turnover": 0.0885,
+        "avg_leverage": 1.653
+      }
+    },
+    "wf_wins": {
+      "LW_w500": 4,
+      "Drift_5%": 1,
+      "Drift_3%": 2,
+      "VolTarget_2%": 4,
+      "VolTarget_3%": 1,
+      "VT2_Drift5": 0,
+      "VT2_Drift3": 1,
+      "VT3_Drift5": 1,
+      "VT3_Drift3": 0,
+      "EqualWeight": 1
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.8,
+      2.5
+    ],
+    "train_time": [
+      1,
+      60
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 2s vs expected ~30s for 0 params \u00d7 587 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 4.11 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=5.95 outside [-0.5, 5.0]"
+  ]
+}

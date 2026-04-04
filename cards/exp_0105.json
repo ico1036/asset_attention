@@ -1,0 +1,48 @@
+{
+  "exp": 105,
+  "timestamp": "2026-04-04T18:55:28.624259",
+  "config": {
+    "model": "StrategyTimer",
+    "n_params": 49,
+    "train_samples": 587,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.3198,
+    "test_sharpe": 6.2551,
+    "elapsed_sec": 4.0,
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      5,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 4s vs expected ~30s for 49 params \u00d7 587 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 4.94 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=6.26 outside [-0.5, 5.0]"
+  ]
+}

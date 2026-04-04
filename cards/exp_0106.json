@@ -1,0 +1,49 @@
+{
+  "exp": 106,
+  "timestamp": "2026-04-04T18:56:13.307276",
+  "config": {
+    "model": "LW_MinVar_w500_final",
+    "n_params": 0,
+    "train_samples": 839,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 2.1488184928894043,
+    "test_sharpe": 6.414970397949219,
+    "elapsed_sec": 2.1,
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      1,
+      60
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 2s vs expected ~30s for 0 params \u00d7 839 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f SUSPICIOUS val_sharpe=2.15 > 2.0. Check for bugs/look-ahead bias.",
+    "\u26a0\ufe0f GAP: |val-test| = 4.27 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning.",
+    "\ud83d\udea8 INSANE test_sharpe=6.41 outside [-0.5, 5.0]"
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "exp": 101,
+  "timestamp": "2026-04-04T18:51:52.285821",
+  "config": {
+    "model": "HRP_comparison",
+    "n_params": 0,
+    "train_samples": 587,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.6783,
+    "test_sharpe": 4.1995,
+    "elapsed_sec": 2.1,
+    "all_results": {
+      "LW_MinVar_w250": {
+        "val_sharpe": 0.9431,
+        "test_sharpe": 5.9751,
+        "mdd": -0.0042,
+        "turnover": 0.0242,
+        "max_weight": 0.427
+      },
+      "LW_MinVar_w500": {
+        "val_sharpe": 1.3198,
+        "test_sharpe": 6.2551,
+        "mdd": -0.0038,
+        "turnover": 0.0185,
+        "max_weight": 0.527
+      },
+      "HRP_w250": {
+        "val_sharpe": 0.021,
+        "test_sharpe": 4.5763,
+        "mdd": -0.0051,
+        "turnover": 0.1144,
+        "max_weight": 0.4972
+      },
+      "HRP_w500": {
+        "val_sharpe": 0.6783,
+        "test_sharpe": 4.1995,
+        "mdd": -0.0069,
+        "turnover": 0.0827,
+        "max_weight": 0.4751
+      },
+      "InvVol_w250": {
+        "val_sharpe": -0.3642,
+        "test_sharpe": 3.4754,
+        "mdd": -0.0093,
+        "turnover": 0.0074,
+        "max_weight": 0.341
+      },
+      "InvVol_w500": {
+        "val_sharpe": -0.1168,
+        "test_sharpe": 3.4276,
+        "mdd": -0.0107,
+        "turnover": 0.0045,
+        "max_weight": 0.3135
+      },
+      "EqualWeight": {
+        "val_sharpe": 0.308,
+        "test_sharpe": 2.8851,
+        "mdd": -0.02,
+        "turnover": 0.0,
+        "max_weight": 0.0588
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.0,
+      1.5
+    ],
+    "train_time": [
+      1,
+      30
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 2s vs expected ~30s for 0 params \u00d7 587 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 3.52 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning."
+  ]
+}
