@@ -101,8 +101,11 @@ Purpose: verify experiments are producing sensible results.
 Every 10 experiments, pause and "dream":
 1. Read all of `experiments.md` and `cards/*.json`.
 2. Extract patterns: what consistently helps, what consistently fails, what's untested.
-3. Write/update `insights.md` with distilled learnings.
-4. Before each new experiment, check `insights.md` — don't repeat known failures.
+3. **Ask "WHY?"**: Why did failures fail? Why did successes succeed? What's the root cause?
+4. **Ask "WHAT IF?"**: Can the problem be reformulated? Different loss? Different target? Different data representation? Think like a researcher, not a hyperparameter tuner.
+5. **Generate 3 new hypotheses** that are fundamentally different from what's been tried. Write them in `insights.md` under "Next Hypotheses."
+6. Write/update `insights.md` with patterns + new hypotheses.
+7. Before each new experiment, check `insights.md` — don't repeat known failures, DO try the new hypotheses.
 
 ## What to Try
 - Attention order variations (spatial→temporal, temporal→spatial, interleaved)

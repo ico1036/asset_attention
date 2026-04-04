@@ -1,0 +1,100 @@
+{
+  "exp": 70,
+  "timestamp": "2026-04-04T17:40:07.470299",
+  "config": {
+    "model": "Heuristic_baselines",
+    "n_params": 0,
+    "strategies": [
+      "EqualWeight",
+      "InverseVol",
+      "MomentumTilt_0.3",
+      "MomentumTilt_0.5",
+      "MomentumTilt_1.0",
+      "MinVariance",
+      "MomTopK_5",
+      "MomTopK_3",
+      "RiskParity"
+    ],
+    "window": 60,
+    "rebal_freq": 5,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 0.2958,
+    "test_sharpe": 3.3253,
+    "elapsed_sec": 0.0,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_strategies": {
+      "EqualWeight": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554
+      },
+      "InverseVol": {
+        "val_sharpe": -0.1598,
+        "test_sharpe": 3.2969
+      },
+      "MomentumTilt_0.3": {
+        "val_sharpe": 0.8632,
+        "test_sharpe": 2.7532
+      },
+      "MomentumTilt_0.5": {
+        "val_sharpe": 0.9515,
+        "test_sharpe": 2.7096
+      },
+      "MomentumTilt_1.0": {
+        "val_sharpe": 1.143,
+        "test_sharpe": 2.4782
+      },
+      "MinVariance": {
+        "val_sharpe": 0.2958,
+        "test_sharpe": 3.3253
+      },
+      "MomTopK_5": {
+        "val_sharpe": 2.1418,
+        "test_sharpe": 1.7783
+      },
+      "MomTopK_3": {
+        "val_sharpe": 2.0647,
+        "test_sharpe": 2.2933
+      },
+      "RiskParity": {
+        "val_sharpe": -0.1598,
+        "test_sharpe": 3.2969
+      }
+    },
+    "best_strategy": "MinVariance",
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      1.5,
+      3.5
+    ],
+    "train_time": [
+      0,
+      5
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 0s vs expected ~30s for 0 params \u00d7 620 samples. Undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 3.03 > 1.5. Likely overfitting.",
+    "\u274c TRAIN_LOSS not falling: 0.000 \u2192 0.000. Model not learning."
+  ]
+}
