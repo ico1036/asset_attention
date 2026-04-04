@@ -1,0 +1,46 @@
+# Program
+
+Read `philosophy.md` first. It defines WHY we're doing this and the constraints.
+
+## Setup (once per session)
+```bash
+uv sync
+uv run prepare.py   # builds tensors from parquet, ~10s
+```
+
+## Experiment Loop
+
+1. Read the current `train.py` and `experiments.md` (past results).
+2. Form a hypothesis. Write it as a comment at the top of `train.py`.
+3. Modify `train.py`. You may change anything: model architecture, optimizer, loss, hyperparameters.
+4. Run: `uv run train.py` — fixed 5-minute wall clock budget.
+5. Record result in `experiments.md`:
+   ```
+   ## Exp N: [short description]
+   - Hypothesis: ...
+   - Change: ...
+   - val_sharpe: X.XX | val_mdd: X.XX% | params: XXK
+   - Verdict: KEEP / DISCARD
+   ```
+6. If KEEP, commit. If DISCARD, revert to best `train.py`.
+7. Repeat from step 1.
+
+## Rules
+- Only modify `train.py`. Never touch `prepare.py`.
+- Max 25K parameters. Print param count at start.
+- Metric: `val_sharpe` (higher = better). Secondary: `val_mdd` (lower = better).
+- Device: MPS (Apple Silicon). Use `torch.device("mps")`.
+- Walk-forward validation: train on past, test on unseen future. No peeking.
+- Every experiment must be reproducible (set seed).
+
+## What to Try
+- Attention order variations (spatial→temporal, temporal→spatial, interleaved)
+- Patch sizes (3, 5, 10 days)
+- Loss functions (-Sharpe, -Sharpe + turnover, CVaR)
+- Depth (1-3 layers)
+- Head count (1, 2, 4)
+- d_model (16, 32, 64)
+- Dropout, weight decay
+- Alternative architectures (MLP-Mixer, linear, CNN)
+- Activation functions (SwiGLU, GELU, ReLU)
+- Position encoding (RoPE, learned, sinusoidal, none)
