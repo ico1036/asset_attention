@@ -1,0 +1,45 @@
+{
+  "exp": 5,
+  "timestamp": "2026-04-04T14:25:12.975823",
+  "verdict": "DISCARD",
+  "config": {
+    "model": "SpatialTransformerAllocator",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.003,
+    "epochs": 500,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 4490,
+    "train_samples": 620,
+    "val_samples": 133,
+    "test_samples": 134,
+    "d_model": 24,
+    "n_heads": 1,
+    "dropout": 0.3,
+    "attention_type": "spatial",
+    "ffn": "GELU"
+  },
+  "results": {
+    "val_sharpe": 1.3317,
+    "test_sharpe": 1.9962,
+    "test_mdd": -1.71,
+    "test_ann_return": 1.55,
+    "elapsed_sec": 1.9,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "benchmark_spy_sharpe": 2.1225
+  }
+}

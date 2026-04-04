@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Exp 4: Single-head spatial attention (assets as tokens)
-Hypothesis: Self-attention over assets captures cross-asset correlations (e.g. flight-to-quality
-             from stocks to bonds) that MLP's fixed cross-layer can't learn dynamically.
-             iTransformer-style: variables as tokens.
+Exp 7: Temporal attention with patching (5-day patches, 12 patches from 60-day window)
+Hypothesis: Mean-pooling the window destroys temporal structure. Patching + temporal
+             self-attention (PatchTST-style) preserves time patterns (regime changes,
+             momentum shifts). Per-asset temporal processing → cross-asset output.
 """
 
 import time, math, numpy as np, torch, torch.nn as nn
 from pathlib import Path
 
-SEED = 42; WINDOW = 60; REBAL_FREQ = 5
+SEED = 42; WINDOW = 60; REBAL_FREQ = 5; PATCH_SIZE = 5
 TRAIN_RATIO = 0.7; VAL_RATIO = 0.15
 LR = 3e-3; EPOCHS = 500
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
@@ -37,37 +37,52 @@ def compute_features(d):
     return features, ret[start:], NAMES
 
 
-class SpatialAttentionAllocator(nn.Module):
-    """Single-head self-attention over assets (iTransformer-style).
-    Each asset is a token with d_model features derived from window-averaged raw features."""
-    def __init__(self, n_assets, n_features, d_model=16, dropout=0.2):
+class PatchTemporalAllocator(nn.Module):
+    """Per-asset: patch → temporal self-attention → score. Cross-asset softmax."""
+    def __init__(self, n_assets, n_features, patch_size=5, d_model=16, dropout=0.2):
         super().__init__()
+        self.patch_size = patch_size
         self.d_model = d_model
-        # Project features to d_model
-        self.proj = nn.Linear(n_features, d_model)
-        # QKV
+        # Patch embedding: (patch_size * n_features) → d_model
+        self.patch_proj = nn.Linear(patch_size * n_features, d_model)
+        # Learnable position encoding
+        n_patches = WINDOW // patch_size  # 12
+        self.pos_enc = nn.Parameter(torch.randn(1, n_patches, d_model) * 0.02)
+        # Temporal self-attention
         self.q = nn.Linear(d_model, d_model, bias=False)
         self.k = nn.Linear(d_model, d_model, bias=False)
         self.v = nn.Linear(d_model, d_model, bias=False)
-        # Output
         self.norm = nn.LayerNorm(d_model)
-        self.out = nn.Linear(d_model, 1)
         self.dropout = nn.Dropout(dropout)
+        # Output: pool temporal → per-asset score
+        self.out = nn.Linear(d_model, 1)
         self.temp = nn.Parameter(torch.tensor(1.0))
 
     def forward(self, x):
         # x: (B, W, N, F)
-        x = x.mean(dim=1)  # (B, N, F) — temporal pooling
-        x = self.proj(x)   # (B, N, d_model)
+        B, W, N, F = x.shape
+        P = self.patch_size
+        n_patches = W // P
 
+        # Reshape to patches: (B, n_patches, N, P*F)
+        x = x.reshape(B, n_patches, P, N, F)
+        x = x.permute(0, 3, 1, 2, 4)  # (B, N, n_patches, P, F)
+        x = x.reshape(B * N, n_patches, P * F)
+
+        # Patch embedding + position
+        x = self.patch_proj(x) + self.pos_enc  # (B*N, n_patches, d_model)
+
+        # Temporal self-attention
         q, k, v = self.q(x), self.k(x), self.v(x)
-        scale = self.d_model ** 0.5
-        attn = torch.softmax(q @ k.transpose(-2,-1) / scale, dim=-1)
+        attn = torch.softmax(q @ k.transpose(-2,-1) / (self.d_model**0.5), dim=-1)
         attn = self.dropout(attn)
-        out = attn @ v  # (B, N, d_model)
+        x = self.norm(x + attn @ v)
 
-        out = self.norm(out + x)  # residual + norm
-        logits = self.out(out).squeeze(-1)  # (B, N)
+        # Pool over patches (use last patch = most recent)
+        x = x[:, -1]  # (B*N, d_model)
+        x = x.reshape(B, N, self.d_model)
+
+        logits = self.out(x).squeeze(-1)  # (B, N)
         return torch.softmax(logits / self.temp.abs().clamp(min=0.1), dim=-1)
 
 
@@ -95,7 +110,7 @@ def main():
     Xte,Yte = X[nt+nv:].to(DEVICE), Y[nt+nv:].to(DEVICE)
     print(f"Samples — train:{nt}, val:{nv}, test:{len(Xte)}")
 
-    model = SpatialAttentionAllocator(N,F,d_model=16,dropout=0.2).to(DEVICE)
+    model = PatchTemporalAllocator(N,F,patch_size=PATCH_SIZE,d_model=16,dropout=0.2).to(DEVICE)
     np_ = sum(p.numel() for p in model.parameters()); print(f"Params: {np_}")
     if np_ > 25000: return
 
@@ -138,10 +153,11 @@ def main():
     print(f"eq:{eqs:.3f} spy:{spys:.3f} val:{best_vs:.3f} test:{ts:.3f} mdd:{mdd:.1f}% ann:{ar*100:.1f}% p:{np_} t:{el:.0f}s")
     print(f"{'='*50}")
 
-    config={"model":"SpatialAttentionAllocator","seed":SEED,"window":WINDOW,"rebal_freq":REBAL_FREQ,
+    config={"model":"PatchTemporalAllocator","seed":SEED,"window":WINDOW,"rebal_freq":REBAL_FREQ,
             "lr":LR,"epochs":EPOCHS,"n_features":F,"features":feat_names,"n_assets":N,
             "n_params":np_,"train_samples":nt,"val_samples":nv,"test_samples":len(Xte),
-            "d_model":16,"n_heads":1,"dropout":0.2,"attention_type":"spatial"}
+            "d_model":16,"n_heads":1,"dropout":0.2,"patch_size":PATCH_SIZE,
+            "attention_type":"temporal","pooling":"last_patch"}
     results={"val_sharpe":round(best_vs,4),"test_sharpe":round(ts,4),"test_mdd":round(mdd,2),
              "test_ann_return":round(ar*100,2),"elapsed_sec":round(el,1),
              "benchmark_equal_weight_sharpe":round(eqs,4),"benchmark_spy_sharpe":round(spys,4)}

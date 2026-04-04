@@ -30,3 +30,21 @@
 - Change: SpatialAttentionAllocator d_model=16, 1 head, LayerNorm, residual
 - val_sharpe: 1.77 | test_sharpe: 1.33 | test_mdd: -2.0% | params: 994
 - Verdict: KEEP (val improved but val/test gap concerning)
+
+## Exp 5: Spatial transformer block (attention + FFN + GELU)
+- Hypothesis: FFN after attention + GELU helps. d_model=24 for more capacity.
+- Change: SpatialTransformerAllocator with FFN, d_model=24, dropout=0.3
+- val_sharpe: 1.33 | test_sharpe: 2.00 | test_mdd: -1.7% | params: 4,490
+- Verdict: DISCARD (bigger model overfits faster)
+
+## Exp 6: Spatial attention + overlapping training samples
+- Hypothesis: 5x more training data via overlapping windows reduces overfitting.
+- Change: step=1 for train, minibatch training
+- val_sharpe: 1.59 | test_sharpe: 2.07 | test_mdd: -1.5% | params: 994
+- Verdict: DISCARD (overlapping didn't help, different split boundaries)
+
+## Exp 7: Temporal attention with 5-day patching (PatchTST-style)
+- Hypothesis: Patching preserves temporal structure that mean-pooling destroys.
+- Change: PatchTemporalAllocator, 5-day patches, 12 patches, d_model=16, last-patch pooling
+- val_sharpe: 2.36 | test_sharpe: 1.44 | test_mdd: -2.1% | params: 1,826
+- Verdict: KEEP (big val improvement, temporal > spatial so far)
