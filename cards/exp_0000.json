@@ -1,40 +1,154 @@
 {
   "exp": 0,
-  "timestamp": "2026-04-04T14:19:04.652592",
-  "verdict": "BASELINE",
+  "timestamp": "2026-04-04T21:49:39.815661",
   "config": {
-    "model": "LinearAllocator",
-    "seed": 42,
-    "window": 60,
-    "rebal_freq": 5,
-    "lr": 0.001,
-    "epochs": 200,
-    "n_features": 10,
-    "features": [
-      "daily_ret",
-      "mom20",
-      "vol20",
-      "price_ma200",
-      "price_ma50",
-      "mom5",
-      "mom60",
-      "vol60",
-      "hl_range",
-      "vol_ratio"
+    "model": "CrossAttentionAllocator",
+    "n_params": 217,
+    "n_assets": 4,
+    "tickers": [
+      "SPY",
+      "TLT",
+      "GLD",
+      "SHY"
     ],
-    "n_assets": 17,
-    "n_params": 318,
-    "train_samples": 620,
-    "val_samples": 133,
-    "test_samples": 134
+    "d_model": 8,
+    "n_heads": 1,
+    "n_patches": 12,
+    "architecture": "learned asset queries \u2192 cross-attn over time patches \u2192 scores \u2192 softmax",
+    "has_attention": true,
+    "preserves_time": true,
+    "regime_signal": {
+      "avg_entropy": 2.430643320083618,
+      "entropy_std": 0.016685936599969864,
+      "crisis_entropy": 2.4181750415182997,
+      "calm_entropy": 2.444614297198996,
+      "diff": -0.026439255680696494,
+      "crisis_weights": [
+        0.25319597125053406,
+        0.2554950416088104,
+        0.2401408851146698,
+        0.2511681020259857
+      ],
+      "calm_weights": [
+        0.253460556268692,
+        0.2504359185695648,
+        0.24627527594566345,
+        0.2498282939195633
+      ]
+    }
   },
   "results": {
-    "val_sharpe": 0.8401,
-    "test_sharpe": 2.5643,
-    "test_mdd": -1.69,
-    "test_ann_return": 1.98,
-    "elapsed_sec": 1.1,
-    "benchmark_equal_weight_sharpe": 2.7554,
-    "benchmark_spy_sharpe": 2.1225
-  }
+    "val_sharpe": 0.8773531860012742,
+    "test_sharpe": 0.8733105548154231,
+    "ann_return_pct": 6.0829145077150315,
+    "ann_vol_pct": 6.965350955824272,
+    "max_drawdown_pct": -41.037917137145996,
+    "turnover": 0.0158852431923151,
+    "yearly": {
+      "2010": {
+        "val_sharpe": 0.09848173411210465,
+        "test_sharpe": 1.8820971584480375,
+        "n_test": 252
+      },
+      "2011": {
+        "val_sharpe": 1.638305899239556,
+        "test_sharpe": 1.5709870558653523,
+        "n_test": 252
+      },
+      "2012": {
+        "val_sharpe": 1.0635954439988557,
+        "test_sharpe": 0.9845949540033111,
+        "n_test": 250
+      },
+      "2013": {
+        "val_sharpe": 1.2248562762546533,
+        "test_sharpe": -0.6550846973489465,
+        "n_test": 252
+      },
+      "2014": {
+        "val_sharpe": -0.7238098669236194,
+        "test_sharpe": 1.8305519566298936,
+        "n_test": 252
+      },
+      "2015": {
+        "val_sharpe": 1.7887532982859353,
+        "test_sharpe": -0.44423239257252223,
+        "n_test": 252
+      },
+      "2016": {
+        "val_sharpe": -0.33792282822494596,
+        "test_sharpe": 0.7011163674585199,
+        "n_test": 252
+      },
+      "2017": {
+        "val_sharpe": 0.6310686165501064,
+        "test_sharpe": 2.4185667565034774,
+        "n_test": 251
+      },
+      "2018": {
+        "val_sharpe": 2.511931449825051,
+        "test_sharpe": -0.3527375790072911,
+        "n_test": 251
+      },
+      "2019": {
+        "val_sharpe": -0.005584939312438779,
+        "test_sharpe": 2.9852827489225127,
+        "n_test": 252
+      },
+      "2020": {
+        "val_sharpe": 2.6134245497771587,
+        "test_sharpe": 1.3882528356293644,
+        "n_test": 253
+      },
+      "2021": {
+        "val_sharpe": 1.353497413023429,
+        "test_sharpe": 0.6118009969366038,
+        "n_test": 252
+      },
+      "2022": {
+        "val_sharpe": 0.4752280833812311,
+        "test_sharpe": -1.4955179704233508,
+        "n_test": 251
+      },
+      "2023": {
+        "val_sharpe": -0.7937262615161653,
+        "test_sharpe": 1.314144628604628,
+        "n_test": 250
+      },
+      "2024": {
+        "val_sharpe": 0.37882189892653645,
+        "test_sharpe": 1.4000079100664116,
+        "n_test": 252
+      },
+      "2025": {
+        "val_sharpe": 1.0895818243827222,
+        "test_sharpe": 2.23324098572941,
+        "n_test": 250
+      },
+      "2026": {
+        "val_sharpe": 1.9085015702414911,
+        "test_sharpe": 0.5333493488451191,
+        "n_test": 62
+      }
+    },
+    "elapsed_sec": 5.2,
+    "loss_curve": {
+      "train": [],
+      "val": []
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      -1.0,
+      1.5
+    ],
+    "train_time": [
+      10,
+      120
+    ]
+  },
+  "verdict": "BASELINE",
+  "issues": [
+    "\u26a0\ufe0f TOO FAST: 5s vs expected ~30s for 217 params \u00d7 620 samples. Undertrained or data too small."
+  ]
 }

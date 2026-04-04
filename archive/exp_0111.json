@@ -1,0 +1,146 @@
+{
+  "exp": 111,
+  "timestamp": "2026-04-04T21:44:56.571943",
+  "config": {
+    "model": "MicroPatchAttention_EntReg",
+    "n_params": 268,
+    "n_assets": 4,
+    "tickers": [
+      "SPY",
+      "TLT",
+      "GLD",
+      "SHY"
+    ],
+    "d_model": 8,
+    "n_heads": 1,
+    "n_patches": 12,
+    "patch_size": 5,
+    "lookback": 60,
+    "n_samples": 4636,
+    "n_splits": 17,
+    "entropy_weight": 0.5,
+    "temperature": "1.0 (no sqrt_d scaling)",
+    "init": "xavier gain=2.0 for Q/K",
+    "has_attention": true,
+    "preserves_time": true,
+    "regime_signal": {
+      "crisis_entropy": 0.8857885562964668,
+      "calm_entropy": 0.8860068363915704,
+      "diff": -0.0002182800951036068,
+      "recency_bias": -0.6308523043990135,
+      "avg_entropy": 0.885868489742279
+    }
+  },
+  "results": {
+    "val_sharpe": 0.890184260992831,
+    "test_sharpe": 0.8768898508366552,
+    "ann_return_pct": 6.874542671721429,
+    "ann_vol_pct": 7.839687807040205,
+    "max_drawdown_pct": -63.294053077697754,
+    "turnover": 0.00032675109105184674,
+    "yearly": {
+      "2010": {
+        "val_sharpe": -0.7479431468921119,
+        "test_sharpe": 1.6693879312374547,
+        "n_test": 252
+      },
+      "2011": {
+        "val_sharpe": 1.279352402280822,
+        "test_sharpe": 1.863882434900001,
+        "n_test": 252
+      },
+      "2012": {
+        "val_sharpe": 1.8372511424557458,
+        "test_sharpe": 1.3957312327197997,
+        "n_test": 250
+      },
+      "2013": {
+        "val_sharpe": 1.2258534423012444,
+        "test_sharpe": -0.012743430301965312,
+        "n_test": 252
+      },
+      "2014": {
+        "val_sharpe": -0.4720094749281325,
+        "test_sharpe": 2.770470662275982,
+        "n_test": 252
+      },
+      "2015": {
+        "val_sharpe": 2.436066590877207,
+        "test_sharpe": -0.24757317591581376,
+        "n_test": 252
+      },
+      "2016": {
+        "val_sharpe": -0.29067258810166613,
+        "test_sharpe": 0.9334333833453212,
+        "n_test": 252
+      },
+      "2017": {
+        "val_sharpe": 0.8413902675600679,
+        "test_sharpe": 2.7353237336885203,
+        "n_test": 251
+      },
+      "2018": {
+        "val_sharpe": 2.7874800520560217,
+        "test_sharpe": -0.37364137580571005,
+        "n_test": 251
+      },
+      "2019": {
+        "val_sharpe": -0.03696465910249312,
+        "test_sharpe": 3.1656859923715404,
+        "n_test": 252
+      },
+      "2020": {
+        "val_sharpe": 2.519135381715577,
+        "test_sharpe": 1.3248352707448154,
+        "n_test": 253
+      },
+      "2021": {
+        "val_sharpe": 1.2788227858826808,
+        "test_sharpe": 0.8665926393593569,
+        "n_test": 252
+      },
+      "2022": {
+        "val_sharpe": 0.7870135636030402,
+        "test_sharpe": -1.6623795751709805,
+        "n_test": 251
+      },
+      "2023": {
+        "val_sharpe": -0.8867508813328567,
+        "test_sharpe": 1.204605366348417,
+        "n_test": 250
+      },
+      "2024": {
+        "val_sharpe": 0.27760625010909473,
+        "test_sharpe": 1.0936591725090645,
+        "n_test": 252
+      },
+      "2025": {
+        "val_sharpe": 0.8682763887347505,
+        "test_sharpe": 1.7425280528250275,
+        "n_test": 250
+      },
+      "2026": {
+        "val_sharpe": 1.4292249196591351,
+        "test_sharpe": 0.13671481986723444,
+        "n_test": 62
+      }
+    },
+    "elapsed_sec": 52.6,
+    "loss_curve": {
+      "train": [],
+      "val": []
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      -1.0,
+      1.5
+    ],
+    "train_time": [
+      10,
+      120
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": []
+}

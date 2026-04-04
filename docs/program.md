@@ -77,7 +77,15 @@ from prepare import (
 4. `sessions_send(sessionKey="main", message="Round complete. Spawn next.")`
 
 ## Critic Review (after every 5 experiments)
-After every 5 experiments, the main session spawns a **Critic agent** (separate session) that:
+After every 5 experiments, **you (Explorer) MUST**:
+1. Stop experimenting.
+2. Update `docs/experiments.md` with all 5 results.
+3. `git add -A && git commit -m "exp N-M complete, requesting critic" && git push`
+4. Send to main: `sessions_send(sessionKey="agent:main:main", message="5실험 완료 (Exp N-M). Critic 리뷰 요청. cards/exp_NNNN.json ~ exp_MMMM.json 확인 필요.")`
+5. Remove LOCK.
+6. **STOP. Do not run more experiments.** Wait for the Critic verdict before continuing.
+
+The main session will spawn a separate **Critic agent** that:
 1. Reads `docs/critic.md` for its persona and review process.
 2. Reviews the last 5 experiment cards + current `train.py`.
 3. Writes a CIO Review verdict to `docs/reviews/review_N.md`.

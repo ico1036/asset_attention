@@ -1,5 +1,6 @@
 {
-  "current_round": 6,
+  "current_round": 7,
   "max_round": 105,
-  "total_experiments": 107
+  "total_experiments": 0,
+  "note": "Reset at R7. Exp 0-108 archived (mission-drift + bugs)."
 }
