@@ -1,0 +1,39 @@
+{
+  "exp": 39,
+  "timestamp": "2026-04-04T15:26:22.135792",
+  "config": {
+    "model": "MLPAllocator_GELU_LN_noise",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.003,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 756,
+    "hidden_dim": 32,
+    "weight_decay": 0.001,
+    "activation": "GELU",
+    "norm": "LayerNorm",
+    "noise_std": 0.1
+  },
+  "results": {
+    "val_sharpe": 0.782,
+    "test_sharpe": 2.8686,
+    "test_mdd": -1.67,
+    "test_ann_return": 2.23,
+    "elapsed_sec": 1.0,
+    "benchmark_equal_weight_sharpe": 2.7554
+  }
+}

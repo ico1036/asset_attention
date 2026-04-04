@@ -1,0 +1,53 @@
+{
+  "exp": 40,
+  "timestamp": "2026-04-04T15:26:55.413141",
+  "config": {
+    "model": "MLPAllocator_GELU_noise_Ensemble",
+    "seeds": [
+      42,
+      123,
+      777,
+      2024,
+      31415
+    ],
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.003,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "ensemble_size": 5,
+    "hidden_dim": 32,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "activation": "GELU",
+    "noise_std": 0.1
+  },
+  "results": {
+    "val_sharpe": 0.887,
+    "test_sharpe": 2.9695,
+    "test_mdd": -1.49,
+    "test_ann_return": 2.07,
+    "elapsed_sec": 1.6,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "individual_val_sharpes": [
+      1.8486,
+      0.7854,
+      0.7445,
+      0.8228,
+      0.7933
+    ]
+  }
+}

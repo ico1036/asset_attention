@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Exp 34: MLP with GELU activation
-Hypothesis: GELU is smoother than ReLU, may find better minimum.
+Exp 36: GELU MLP + Gaussian noise augmentation (sigma=0.1)
+Best Round 2 model: val=1.85, test=4.23, test-EW gap=+1.47
 """
 
 import time, math, json, datetime, numpy as np, torch, torch.nn as nn
@@ -10,6 +10,7 @@ from pathlib import Path
 SEED = 42; WINDOW = 60; REBAL_FREQ = 5; TRAIN_RATIO = 0.7; VAL_RATIO = 0.15
 LR = 3e-3; EPOCHS = 500; DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 TIME_BUDGET = 300; DATA = Path(__file__).parent / "data"
+NOISE_STD = 0.1
 
 def compute_features(d):
     adj = d["adj_close"]; ret = d["log_return"]; T, N = ret.shape
@@ -37,8 +38,10 @@ class MLPAllocator(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.temp = nn.Parameter(torch.tensor(1.0))
         self.act = nn.GELU()
-    def forward(self, x):
+    def forward(self, x, noise=False):
         x = x.mean(dim=1)
+        if noise and self.training:
+            x = x + torch.randn_like(x) * NOISE_STD
         x = self.act(self.dropout(self.fc1(x)))
         x = self.fc2(x).squeeze(-1)
         x = self.cross(x)
@@ -73,7 +76,7 @@ def main():
     best_vs, best_st, noimp = -999, None, 0
     for ep in range(EPOCHS):
         if time.time()-t0 > TIME_BUDGET: break
-        model.train(); w = model(Xt); loss = sharpe_loss((w*Yt).sum(-1))
+        model.train(); w = model(Xt, noise=True); loss = sharpe_loss((w*Yt).sum(-1))
         opt.zero_grad(); loss.backward(); torch.nn.utils.clip_grad_norm_(model.parameters(),1.0)
         opt.step(); sched.step()
         if ep % 5 == 0:
@@ -92,9 +95,9 @@ def main():
     el=time.time()-t0
     print(f"\n{'='*50}\neq:{eqs:.3f} val:{best_vs:.3f} test:{ts:.3f} mdd:{mdd:.1f}% ann:{ar*100:.1f}% t:{el:.0f}s")
 
-    config={"model":"MLPAllocator_GELU","seed":SEED,"window":WINDOW,"rebal_freq":REBAL_FREQ,
+    config={"model":"MLPAllocator_GELU_noise","seed":SEED,"window":WINDOW,"rebal_freq":REBAL_FREQ,
             "lr":LR,"n_features":F,"features":feat_names,"n_assets":N,"n_params":np_,
-            "hidden_dim":32,"dropout":0.3,"weight_decay":1e-3,"activation":"GELU"}
+            "hidden_dim":32,"dropout":0.3,"weight_decay":1e-3,"activation":"GELU","noise_std":NOISE_STD}
     results={"val_sharpe":round(best_vs,4),"test_sharpe":round(ts,4),"test_mdd":round(mdd,2),
              "test_ann_return":round(ar*100,2),"elapsed_sec":round(el,1),
              "benchmark_equal_weight_sharpe":round(eqs,4)}

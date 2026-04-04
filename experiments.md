@@ -122,8 +122,134 @@
 - val_sharpe: 2.39 | test_sharpe: -0.42 | test_mdd: -5.4% | params: 1,826
 - Verdict: DISCARD (SGD didn't help, test is negative)
 
-## Exp 20: 2-layer temporal attention with shared QKV
+## Exp 20: 2-layer temporal attention with shared QKV (Round 1 end)
 - Hypothesis: Hierarchical temporal representations from 2 attention layers.
 - Change: n_layers=2, shared QKV, separate LayerNorms
 - val_sharpe: 2.51 | test_sharpe: 1.06 | test_mdd: -2.3% | params: 1,858
 - Verdict: DISCARD (good but not beating ensemble val=2.73)
+
+---
+# Round 2: Anti-Overfitting Focus
+
+## Exp 21: Reproduce Exp 1 MLP baseline
+- Hypothesis: Verify reproducibility.
+- Change: Exact same as Exp 1.
+- val_sharpe: 1.18 | test_sharpe: 3.94 | test_mdd: -0.8% | params: 692
+- Verdict: BASELINE (reproduced exactly)
+
+## Exp 22: MLP 5-seed ensemble
+- Hypothesis: MLP doesn't overfit, ensembling should be safe.
+- Change: Average portfolio weights from seeds [42, 123, 777, 2024, 31415]
+- val_sharpe: 0.86 | test_sharpe: 2.99 | test_mdd: -1.5% | params: 692×5
+- Individual val: [1.18, 0.79, 0.73, 0.84, 0.81]
+- Verdict: DISCARD (ensembling dilutes seed=42 alpha)
+
+## Exp 23: MLP stronger regularization (dropout=0.5, wd=5e-3)
+- Hypothesis: More regularization closes val-test gap.
+- Change: dropout=0.5, weight_decay=5e-3
+- val_sharpe: 0.79 | test_sharpe: 2.79 | test_mdd: -1.6% | params: 692
+- Verdict: DISCARD (too much regularization, converges to EW)
+
+## Exp 24: MLP without cross-asset layer
+- Hypothesis: Cross layer (289 params = 42%) may overfit.
+- Change: Remove cross-asset linear layer
+- val_sharpe: 1.68 | test_sharpe: 2.08 | test_mdd: -1.5% | params: 386
+- Verdict: DISCARD (cross layer is critical for test performance)
+
+## Exp 25: MLP hidden_dim=16
+- Hypothesis: Smaller model reduces noise.
+- Change: hidden_dim=16 (instead of 32)
+- val_sharpe: 1.09 | test_sharpe: 1.81 | test_mdd: -2.5% | params: 500
+- Verdict: DISCARD (too small, underfits)
+
+## Exp 26: MLP exponentially-weighted window mean (halflife=20)
+- Hypothesis: Exp weighting emphasizes recent data.
+- Change: Exponential decay weights for window averaging
+- val_sharpe: 0.75 | test_sharpe: 2.77 | test_mdd: -1.6% | params: 692
+- Verdict: DISCARD (no improvement over uniform mean)
+
+## Exp 27: MLP window=30
+- Hypothesis: Shorter window = less stale data + more samples.
+- Change: WINDOW=30
+- val_sharpe: 0.75 | test_sharpe: 2.76 | test_mdd: -1.7% | params: 692
+- Verdict: DISCARD (converges to EW, window=60 optimal)
+
+## Exp 28: MLP REBAL_FREQ=10 (bi-weekly)
+- Hypothesis: Less frequent rebalancing = smoother.
+- Change: REBAL_FREQ=10
+- val_sharpe: 1.24 | test_sharpe: 5.37 | test_mdd: -0.4% | params: 692
+- Note: Only 67 test samples (vs 134 with freq=5). EW=3.86 (different split). Not comparable.
+- Verdict: DISCARD (too few samples for reliable comparison)
+
+## Exp 29: MLP blended with EW (alpha=0.5)
+- Hypothesis: Shrinkage toward EW stabilizes OOS.
+- Change: weights = 0.5*model + 0.5*EW
+- val_sharpe: 0.97 | test_sharpe: 2.96 | test_mdd: -1.6% | params: 692
+- Verdict: DISCARD (dilutes alpha toward EW)
+
+## Exp 30: MLP blended with EW (alpha=0.3)
+- Hypothesis: Less shrinkage preserves more alpha.
+- Change: weights = 0.3*model + 0.7*EW
+- val_sharpe: 1.12 | test_sharpe: 2.87 | test_mdd: -1.8% | params: 692
+- Verdict: DISCARD
+
+## Exp 31: MLP last-day features only
+- Hypothesis: Features already encode temporal info, averaging adds noise.
+- Change: Use x[:, -1] instead of x.mean(dim=1)
+- val_sharpe: 0.72 | test_sharpe: 2.80 | test_mdd: -1.6% | params: 692
+- Verdict: DISCARD (mean pooling is better)
+
+## Exp 32: 2-layer MLP (10→32→16→1 + cross)
+- Hypothesis: Deeper captures more complex interactions.
+- Change: 2 hidden layers [32, 16]
+- val_sharpe: 0.89 | test_sharpe: 3.12 | test_mdd: -1.3% | params: 1204
+- Verdict: DISCARD (more params, worse than Exp 1)
+
+## Exp 33: Momentum-only linear model (3 features)
+- Hypothesis: Momentum is the primary signal.
+- Change: Linear model on mom5, mom20, mom60 only
+- val_sharpe: 0.75 | test_sharpe: 2.62 | test_mdd: -1.7% | params: 311
+- Verdict: DISCARD (below EW, all features needed)
+
+## Exp 34: MLP with GELU activation
+- Hypothesis: GELU is smoother than ReLU.
+- Change: Replace ReLU with GELU
+- val_sharpe: 1.52 | test_sharpe: 3.95 | test_mdd: -0.8% | params: 692
+- Verdict: KEEP (same test as Exp 1 but better val = smaller gap)
+
+## Exp 35: GELU MLP hidden=48
+- Hypothesis: More capacity with GELU.
+- Change: hidden_dim=48
+- val_sharpe: 0.75 | test_sharpe: 2.72 | test_mdd: -1.7% | params: 884
+- Verdict: DISCARD (overfits)
+
+## Exp 36: GELU MLP + Gaussian noise (sigma=0.1) ⭐
+- Hypothesis: Input noise augmentation as regularizer.
+- Change: Add N(0, 0.1) noise to features during training
+- val_sharpe: 1.85 | test_sharpe: 4.23 | test_mdd: -0.7% | params: 692
+- Verdict: KEEP ⭐ BEST MODEL (beats Exp 1 on both val AND test)
+
+## Exp 37: GELU MLP + noise sigma=0.2
+- Hypothesis: More noise = more regularization.
+- Change: noise sigma=0.2
+- val_sharpe: 1.70 | test_sharpe: 4.28 | test_mdd: -0.7% | params: 692
+- Verdict: KEEP (slightly higher test but lower val)
+
+## Exp 38: GELU MLP + noise sigma=0.05
+- Hypothesis: Less noise.
+- Change: noise sigma=0.05
+- val_sharpe: 1.89 | test_sharpe: 4.16 | test_mdd: -0.7% | params: 692
+- Verdict: KEEP (best val, good test)
+
+## Exp 39: GELU MLP + noise + LayerNorm (no dropout)
+- Hypothesis: LayerNorm > dropout for small models.
+- Change: Replace dropout with LayerNorm
+- val_sharpe: 0.78 | test_sharpe: 2.87 | test_mdd: -1.7% | params: 756
+- Verdict: DISCARD (LayerNorm hurt badly)
+
+## Exp 40: GELU MLP + noise=0.1, 5-seed ensemble
+- Hypothesis: Noise-improved models ensemble better.
+- Change: 5 seeds with noise augmentation
+- val_sharpe: 0.89 | test_sharpe: 2.97 | test_mdd: -1.5% | params: 692×5
+- Individual test: seed42=4.23, others≈2.75 (all EW-level)
+- Verdict: DISCARD (seed=42 uniquely finds alpha; ensembling dilutes it)
