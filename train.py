@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Exp 13: PatchTemporal + causal masking + higher weight decay
-Hypothesis: Causal attention mask ensures each patch only attends to past patches,
-             enforcing temporal causality. Higher weight decay (1e-3 vs 1e-4) reduces
-             overfitting (exp7 had train=6.06 vs val=2.36 gap).
+Exp 15: Multi-seed ensemble (3 seeds) of PatchTemporal (exp13 arch)
+Hypothesis: Averaging portfolio weights across 3 independently trained models
+             reduces variance and overfitting. Each model sees the same data but
+             with different random initialization.
 """
 
 import time, math, numpy as np, torch, torch.nn as nn
 from pathlib import Path
 
-SEED = 42; WINDOW = 60; REBAL_FREQ = 5; PATCH_SIZE = 5
+WINDOW = 60; REBAL_FREQ = 5; PATCH_SIZE = 5
 TRAIN_RATIO = 0.7; VAL_RATIO = 0.15
 LR = 3e-3; EPOCHS = 500
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 TIME_BUDGET = 300
+SEEDS = [42, 123, 777]
 
-torch.manual_seed(SEED); np.random.seed(SEED)
 DATA = Path(__file__).parent / "data"
 
 
@@ -38,9 +38,9 @@ def compute_features(d):
 
 
 class PatchTemporalAllocator(nn.Module):
-    def __init__(self, n_assets, n_features, patch_size=5, d_model=16, dropout=0.2, causal=True):
+    def __init__(self, n_assets, n_features, patch_size=5, d_model=16, dropout=0.2):
         super().__init__()
-        self.patch_size = patch_size; self.d_model = d_model; self.causal = causal
+        self.patch_size = patch_size; self.d_model = d_model
         n_patches = WINDOW // patch_size
         self.patch_proj = nn.Linear(patch_size * n_features, d_model)
         self.pos_enc = nn.Parameter(torch.randn(1, n_patches, d_model) * 0.02)
@@ -51,10 +51,8 @@ class PatchTemporalAllocator(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.out = nn.Linear(d_model, 1)
         self.temp = nn.Parameter(torch.tensor(1.0))
-        # Causal mask
-        if causal:
-            mask = torch.triu(torch.ones(n_patches, n_patches), diagonal=1).bool()
-            self.register_buffer('mask', mask)
+        mask = torch.triu(torch.ones(n_patches, n_patches), diagonal=1).bool()
+        self.register_buffer('mask', mask)
 
     def forward(self, x):
         B, W, N, F = x.shape; P = self.patch_size; nP = W // P
@@ -62,8 +60,7 @@ class PatchTemporalAllocator(nn.Module):
         x = self.patch_proj(x) + self.pos_enc
         q,k,v = self.q(x), self.k(x), self.v(x)
         scores = q@k.transpose(-2,-1)/(self.d_model**0.5)
-        if self.causal:
-            scores = scores.masked_fill(self.mask, float('-inf'))
+        scores = scores.masked_fill(self.mask, float('-inf'))
         attn = torch.softmax(scores, dim=-1)
         attn = self.dropout(attn)
         x = self.norm(x + attn@v)
@@ -83,8 +80,37 @@ def make_dataset(features, returns, window, rebal_freq):
     return torch.stack(X), torch.stack(Y)
 
 
+def train_one_seed(seed, Xt, Yt, Xv, Yv, N, F, t0):
+    torch.manual_seed(seed); np.random.seed(seed)
+    model = PatchTemporalAllocator(N,F,patch_size=PATCH_SIZE,d_model=16,dropout=0.2).to(DEVICE)
+    opt = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-3)
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)
+    best_vs, best_st, noimp = -999, None, 0
+
+    for ep in range(EPOCHS):
+        if time.time()-t0 > TIME_BUDGET: break
+        model.train()
+        w = model(Xt); loss = sharpe_loss((w*Yt).sum(-1))
+        opt.zero_grad(); loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        opt.step(); sched.step()
+        if ep % 5 == 0:
+            model.eval()
+            with torch.no_grad():
+                vs = -(sharpe_loss((model(Xv)*Yv).sum(-1)).item())
+                if vs > best_vs: best_vs=vs; best_st={k:v.clone() for k,v in model.state_dict().items()}; noimp=0
+                else: noimp += 5
+            if noimp >= 80: break
+
+    model.load_state_dict(best_st)
+    return model, best_vs
+
+
 def main():
     t0 = time.time()
+    # Use seed=42 for data prep
+    torch.manual_seed(42); np.random.seed(42)
+
     d = torch.load(DATA/"tensors.pt", weights_only=False)
     features, returns, feat_names = compute_features(d)
     T,N,F = features.shape; print(f"Features: {T}×{N}×{F}")
@@ -96,33 +122,33 @@ def main():
     Xte,Yte = X[nt+nv:].to(DEVICE), Y[nt+nv:].to(DEVICE)
     print(f"Samples — train:{nt}, val:{nv}, test:{len(Xte)}")
 
-    model = PatchTemporalAllocator(N,F,patch_size=PATCH_SIZE,d_model=16,dropout=0.2,causal=True).to(DEVICE)
-    np_ = sum(p.numel() for p in model.parameters()); print(f"Params: {np_}")
-    if np_ > 25000: return
+    np_ = sum(p.numel() for p in PatchTemporalAllocator(N,F).parameters())
+    print(f"Params per model: {np_}, ensemble total: {np_*len(SEEDS)}")
 
-    opt = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-3)  # Higher WD
-    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)
-    best_vs, best_st, patience, noimp = -999, None, 80, 0
+    models = []
+    val_sharpes = []
+    for seed in SEEDS:
+        model, vs = train_one_seed(seed, Xt, Yt, Xv, Yv, N, F, t0)
+        models.append(model)
+        val_sharpes.append(vs)
+        print(f"Seed {seed}: val_sharpe={vs:.3f}")
 
-    for ep in range(EPOCHS):
-        if time.time()-t0 > TIME_BUDGET: break
-        model.train()
-        w = model(Xt); pr = (w*Yt).sum(-1); loss = sharpe_loss(pr)
-        opt.zero_grad(); loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-        opt.step(); sched.step()
-        if ep % 5 == 0:
-            model.eval()
-            with torch.no_grad():
-                vs = -(sharpe_loss((model(Xv)*Yv).sum(-1)).item())
-                if vs > best_vs: best_vs=vs; best_st={k:v.clone() for k,v in model.state_dict().items()}; noimp=0
-                else: noimp += 5
-            if ep%50==0: print(f"Ep {ep:4d} | train:{-(loss.item()):.3f} | val:{vs:.3f}")
-            if noimp >= patience: print(f"Early stop {ep}"); break
-
-    model.load_state_dict(best_st); model.eval()
+    # Ensemble: average weights
     with torch.no_grad():
-        wt=model(Xte); tr=(wt*Yte).sum(-1); ts=-(sharpe_loss(tr).item())
+        # Val ensemble
+        w_val_avg = torch.zeros(len(Xv), N, device=DEVICE)
+        for m in models:
+            m.eval(); w_val_avg += m(Xv)
+        w_val_avg /= len(models)
+        best_val_sharpe = -(sharpe_loss((w_val_avg*Yv).sum(-1)).item())
+
+        # Test ensemble
+        w_test_avg = torch.zeros(len(Xte), N, device=DEVICE)
+        for m in models:
+            w_test_avg += m(Xte)
+        w_test_avg /= len(models)
+        tr = (w_test_avg*Yte).sum(-1)
+        ts = -(sharpe_loss(tr).item())
         cum=(1+tr).cumprod(0); pk=cum.cummax(0).values; mdd=((cum-pk)/pk).min().item()*100
         ar=(cum[-1].item())**(252/(len(tr)*REBAL_FREQ))-1
         eqs=-(sharpe_loss((torch.ones(N,device=DEVICE)/N*Yte).sum(-1)).item())
@@ -130,16 +156,18 @@ def main():
 
     el=time.time()-t0
     print(f"\n{'='*50}")
-    print(f"eq:{eqs:.3f} spy:{spys:.3f} val:{best_vs:.3f} test:{ts:.3f} mdd:{mdd:.1f}% ann:{ar*100:.1f}% p:{np_} t:{el:.0f}s")
+    print(f"eq:{eqs:.3f} spy:{spys:.3f} val:{best_val_sharpe:.3f} test:{ts:.3f}")
+    print(f"mdd:{mdd:.1f}% ann:{ar*100:.1f}% seeds:{SEEDS} t:{el:.0f}s")
 
-    config={"model":"PatchTemporalAllocator","seed":SEED,"window":WINDOW,"rebal_freq":REBAL_FREQ,
-            "lr":LR,"epochs":EPOCHS,"n_features":F,"features":feat_names,"n_assets":N,
-            "n_params":np_,"train_samples":nt,"val_samples":nv,"test_samples":len(Xte),
-            "d_model":16,"n_heads":1,"dropout":0.2,"patch_size":PATCH_SIZE,
-            "causal":True,"weight_decay":1e-3,"attention_type":"temporal","pooling":"last_patch"}
-    results={"val_sharpe":round(best_vs,4),"test_sharpe":round(ts,4),"test_mdd":round(mdd,2),
+    config={"model":"PatchTemporalAllocator_Ensemble","seeds":SEEDS,"window":WINDOW,
+            "rebal_freq":REBAL_FREQ,"lr":LR,"epochs":EPOCHS,"n_features":F,"features":feat_names,
+            "n_assets":N,"n_params":np_,"ensemble_size":len(SEEDS),
+            "train_samples":nt,"val_samples":nv,"test_samples":len(Xte),
+            "d_model":16,"dropout":0.2,"patch_size":PATCH_SIZE,"causal":True}
+    results={"val_sharpe":round(best_val_sharpe,4),"test_sharpe":round(ts,4),"test_mdd":round(mdd,2),
              "test_ann_return":round(ar*100,2),"elapsed_sec":round(el,1),
-             "benchmark_equal_weight_sharpe":round(eqs,4),"benchmark_spy_sharpe":round(spys,4)}
+             "benchmark_equal_weight_sharpe":round(eqs,4),"benchmark_spy_sharpe":round(spys,4),
+             "individual_val_sharpes":[round(v,4) for v in val_sharpes]}
     import json as _j
     pb=None; cd=Path(__file__).parent/"cards"
     for p in sorted(cd.glob("exp_*.json")):

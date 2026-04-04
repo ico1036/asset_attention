@@ -1,0 +1,47 @@
+{
+  "exp": 14,
+  "timestamp": "2026-04-04T14:38:22.773898",
+  "verdict": "DISCARD",
+  "config": {
+    "model": "PatchTemporalAllocator",
+    "seed": 42,
+    "window": 120,
+    "rebal_freq": 5,
+    "lr": 0.003,
+    "epochs": 500,
+    "n_features": 8,
+    "features": [
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range"
+    ],
+    "n_assets": 17,
+    "n_params": 1858,
+    "train_samples": 612,
+    "val_samples": 131,
+    "test_samples": 132,
+    "d_model": 16,
+    "n_heads": 1,
+    "dropout": 0.2,
+    "patch_size": 5,
+    "causal": true,
+    "weight_decay": 0.001,
+    "attention_type": "temporal",
+    "pooling": "last_patch",
+    "feature_selection": "dropped daily_ret and vol_ratio"
+  },
+  "results": {
+    "val_sharpe": 1.2524,
+    "test_sharpe": 2.1127,
+    "test_mdd": -1.83,
+    "test_ann_return": 1.71,
+    "elapsed_sec": 4.4,
+    "benchmark_equal_weight_sharpe": 2.8647,
+    "benchmark_spy_sharpe": 2.2274
+  }
+}

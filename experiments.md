@@ -84,3 +84,16 @@
 - Change: Causal attention mask, weight_decay 1e-3
 - val_sharpe: 2.36 | test_sharpe: 1.44 | test_mdd: -2.1% | params: 1,826
 - Verdict: KEEP (marginal improvement, causal mask + WD don't change much)
+
+## Exp 14: PatchTemporal fewer features + window=120
+- Hypothesis: Drop noisy features (daily_ret, vol_ratio), longer window for regime capture.
+- Change: 8 features, window=120, 24 patches
+- val_sharpe: 1.25 | test_sharpe: 2.11 | test_mdd: -1.8% | params: 1,858
+- Verdict: DISCARD (fewer features + different window hurt badly)
+
+## Exp 15: 3-seed ensemble of PatchTemporal (exp13 arch)
+- Hypothesis: Averaging weights from 3 independently initialized models reduces variance.
+- Change: Seeds [42, 123, 777], average portfolio weights
+- val_sharpe: 2.57 | test_sharpe: 0.83 | test_mdd: -2.2% | params: 1,826×3
+- Individual val: [2.36, 2.55, 2.37]
+- Verdict: KEEP (val improved significantly, but test divergence worrying)
