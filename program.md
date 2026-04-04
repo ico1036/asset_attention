@@ -22,7 +22,7 @@ uv run prepare.py   # builds tensors from parquet, ~10s
    - val_sharpe: X.XX | val_mdd: X.XX% | params: XXK
    - Verdict: KEEP / DISCARD
    ```
-6. If KEEP, commit. If DISCARD, revert to best `train.py`.
+6. If KEEP: `git add -A && git commit -m "exp N: [description]" && git push`. If DISCARD: revert to best `train.py`.
 7. Repeat from step 1.
 
 ## Rules
