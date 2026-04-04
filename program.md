@@ -2,6 +2,16 @@
 
 Read `philosophy.md` first. It defines WHY we're doing this and the constraints.
 
+## Lock Protocol
+Before starting experiments, create `LOCK` file. Remove it when done.
+If `LOCK` exists when you start, another agent is running — wait or abort.
+```bash
+if [ -f LOCK ]; then echo "LOCKED"; exit 1; fi
+echo "$(date)" > LOCK
+# ... run experiments ...
+rm LOCK
+```
+
 ## Setup (once per session)
 ```bash
 uv sync
