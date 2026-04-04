@@ -1,0 +1,107 @@
+{
+  "exp": 85,
+  "timestamp": "2026-04-04T18:12:47.118275",
+  "config": {
+    "model": "ReturnAttentionAllocator",
+    "n_params": 884,
+    "train_samples": 620,
+    "n_assets": 17,
+    "d_in": 5
+  },
+  "results": {
+    "val_sharpe": 1.1262,
+    "test_sharpe": 5.055,
+    "elapsed_sec": 120.0,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "Attn_sharpe": {
+        "val_sharpe": 0.784,
+        "test_sharpe": 2.8507,
+        "per_seed_val": [
+          0.859,
+          0.844,
+          0.716,
+          0.647,
+          0.853
+        ],
+        "per_seed_test": [
+          2.801,
+          2.926,
+          2.754,
+          2.95,
+          2.823
+        ]
+      },
+      "Attn_mimic": {
+        "val_sharpe": 0.7908,
+        "test_sharpe": 2.8457,
+        "per_seed_val": [
+          0.839,
+          0.854,
+          0.718,
+          0.67,
+          0.872
+        ],
+        "per_seed_test": [
+          2.79,
+          2.881,
+          2.764,
+          2.936,
+          2.857
+        ]
+      },
+      "Attn_combined": {
+        "val_sharpe": -599.0604,
+        "test_sharpe": 2.8405,
+        "per_seed_val": [
+          0.855,
+          0.843,
+          -999,
+          -999,
+          -999
+        ],
+        "per_seed_test": [
+          2.802,
+          2.891,
+          2.714,
+          2.962,
+          2.834
+        ]
+      },
+      "LW_MinVar": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055
+      },
+      "EW": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      30,
+      120
+    ]
+  }
+}

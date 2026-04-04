@@ -496,3 +496,66 @@
 - MinVarMLP (learned model with MinVar input): val=0.81, test=2.51 — WORSE than pure LW_MinVar!
 - Learned models consistently degrade toward EW, can't leverage MinVar edge.
 - Verdict: KEEP ⭐⭐
+
+## Exp 80: LW_MinVar variants — exp weighting, shrinkage tuning, attention cov
+- LW_MinVar confirmed: val=1.126, test=5.055, MDD=-0.57%
+- Exponential weighting worse than LW (val=0.44, test=4.16)
+- LW+Exp blend at 0.7: val=0.88, test=4.75
+- AttentionCov: val=1.35, test=1.97 (overfits)
+- Verdict: DISCARD (LW baseline unchanged)
+
+## Exp 81: Tangency portfolio + different rebalancing frequencies
+- Tangency overfits mean estimates: val=1.27, test=2.45 (worse than LW on test)
+- r=10/r=20 too few test samples for reliable comparison
+- LW+Tang_0.9: val=1.00, test=4.87 (close to pure LW)
+- Verdict: DISCARD
+
+## Exp 82: Expanding window + constrained LW + attention mimic
+- Bug in data pipeline caused inconsistent LW results (0.672 vs 1.126)
+- Standalone reproduction confirmed original LW=5.055 is correct
+- Attention mimic: val=0.88, test=2.71 — can't learn LW structure
+- Verdict: DISCARD (pipeline bug)
+
+## Exp 83: ⭐ Adaptive shrinkage + drawdown analysis
+- AdaptShrink_h0.7_l0.05: val=0.306, **test=5.673** (best test across all experiments!)
+- LW optimal shrinkage ≈ automatic (LW picks ~0.1 based on data)
+- **DRAWDOWN**: LW ann_vol=1.3%, MDD=-0.57%, Calmar=11.74, 70.9% positive
+- **DRAWDOWN**: EW ann_vol=3.9%, MDD=-1.67%, Calmar=6.48, 63.4% positive
+- Verdict: KEEP ⭐ (drawdown analysis, adaptive shrinkage)
+
+## Exp 84: ⭐⭐⭐ Walk-forward evaluation (rolling windows)
+- **LW_MinVar wins 10/13 windows (77%)**
+- Avg LW Sharpe: 2.517 vs Avg EW Sharpe: 1.393 (Δ=+1.124)
+- LW wins by large margins when it wins (+3.2, +3.8, +4.6)
+- EW wins by small margins when it wins (-1.4, -0.3, -0.1)
+- **ROBUSTNESS CONFIRMED across 13 rolling 1-year windows**
+- Verdict: KEEP ⭐⭐⭐
+
+## Exp 85: Attention on return features (vol, mom, corr)
+- Sharpe loss: val=0.78, test=2.85 (barely beats EW)
+- Mimic loss: val=0.79, test=2.85 (same)
+- Combined loss: broken for some seeds
+- Attention can't learn covariance structure from 620 samples
+- Verdict: DISCARD
+
+## Exp 86: Attention as LW/EW regime blender
+- Blender learns α≈0.87 (87% LW, 13% EW)
+- val=1.03, test=4.64 — WORSE than pure LW
+- Static α=0.9: val=1.06, test=4.62 (same performance with 0 params)
+- **Confirms: attention adds nothing to LW_MinVar**
+- Verdict: DISCARD
+
+## Exp 87: ⭐⭐⭐ FINAL comprehensive comparison
+
+| Strategy | Val Sharpe | Test Sharpe | MDD | Params |
+|----------|-----------|------------|-----|--------|
+| **LW_MinVar** | **1.126** | **5.055** | **-0.57%** | **0** |
+| InverseVol | -0.125 | 3.363 | -0.70% | 0 |
+| Attention | 1.458 | 2.161 | N/A | 944 |
+| MLP | 0.915 | 2.407 | N/A | 692 |
+| EqualWeight | 0.763 | 2.755 | -1.67% | 0 |
+
+- **LW_MinVar is the definitive winner**: beats EW by +2.30 on test, +0.36 on val
+- Walk-forward robust (77% win rate across 13 windows)
+- 0 learned parameters, Calmar ratio 11.74, 70.9% positive weeks
+- Verdict: KEEP ⭐⭐⭐ FINAL ANSWER

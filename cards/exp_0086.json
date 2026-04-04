@@ -1,0 +1,103 @@
+{
+  "exp": 86,
+  "timestamp": "2026-04-04T18:14:24.466403",
+  "config": {
+    "model": "BlenderModel",
+    "n_params": 58,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.0283,
+    "test_sharpe": 4.6365,
+    "elapsed_sec": 28.7,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "Blender": {
+        "val_sharpe": 1.0283,
+        "test_sharpe": 4.6365,
+        "per_seed": [
+          [
+            1.01,
+            4.674
+          ],
+          [
+            1.047,
+            4.65
+          ],
+          [
+            0.98,
+            4.691
+          ],
+          [
+            1.096,
+            4.612
+          ],
+          [
+            1.008,
+            4.555
+          ]
+        ],
+        "avg_alpha": 0.867
+      },
+      "Static_\u03b10.5": {
+        "val_sharpe": 0.8689,
+        "test_sharpe": 3.4376
+      },
+      "Static_\u03b10.7": {
+        "val_sharpe": 0.9452,
+        "test_sharpe": 3.9224
+      },
+      "Static_\u03b10.8": {
+        "val_sharpe": 0.9963,
+        "test_sharpe": 4.2424
+      },
+      "Static_\u03b10.9": {
+        "val_sharpe": 1.0576,
+        "test_sharpe": 4.6234
+      },
+      "Static_\u03b10.95": {
+        "val_sharpe": 1.0915,
+        "test_sharpe": 4.8349
+      },
+      "Static_\u03b11.0": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055
+      },
+      "LW_MinVar": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055
+      },
+      "EW": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      1.5
+    ],
+    "train_time": [
+      5,
+      90
+    ]
+  }
+}

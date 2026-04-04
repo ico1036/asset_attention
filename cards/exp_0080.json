@@ -1,0 +1,127 @@
+{
+  "exp": 80,
+  "timestamp": "2026-04-04T17:58:29.738945",
+  "config": {
+    "model": "LW_MinVar_variants+AttnCov",
+    "n_params": 249,
+    "train_samples": 620,
+    "n_assets": 17
+  },
+  "results": {
+    "val_sharpe": 1.1262,
+    "test_sharpe": 5.055,
+    "elapsed_sec": 37.4,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "all_results": {
+      "LW_MinVar": {
+        "val_sharpe": 1.1262,
+        "test_sharpe": 5.055,
+        "mdd": -0.0057
+      },
+      "ExpMinVar_hl10": {
+        "val_sharpe": 0.4373,
+        "test_sharpe": 4.1581,
+        "mdd": -0.0066
+      },
+      "ExpMinVar_hl20": {
+        "val_sharpe": 0.3999,
+        "test_sharpe": 4.143,
+        "mdd": -0.0067
+      },
+      "ExpMinVar_hl30": {
+        "val_sharpe": 0.3983,
+        "test_sharpe": 4.1339,
+        "mdd": -0.0067
+      },
+      "FixedShrink_0.3": {
+        "val_sharpe": 0.3459,
+        "test_sharpe": 4.1033,
+        "mdd": -0.0067
+      },
+      "FixedShrink_0.5": {
+        "val_sharpe": 0.054,
+        "test_sharpe": 3.5606,
+        "mdd": -0.0077
+      },
+      "FixedShrink_0.7": {
+        "val_sharpe": 0.0351,
+        "test_sharpe": 3.1179,
+        "mdd": -0.009
+      },
+      "FixedShrink_0.9": {
+        "val_sharpe": 0.3814,
+        "test_sharpe": 2.7998,
+        "mdd": -0.0125
+      },
+      "EW": {
+        "val_sharpe": 0.7635,
+        "test_sharpe": 2.7554,
+        "mdd": -0.0167
+      },
+      "LW+Exp_a0.3": {
+        "val_sharpe": 0.5905,
+        "test_sharpe": 4.3886
+      },
+      "LW+Exp_a0.5": {
+        "val_sharpe": 0.7304,
+        "test_sharpe": 4.5657
+      },
+      "LW+Exp_a0.7": {
+        "val_sharpe": 0.8809,
+        "test_sharpe": 4.7536
+      },
+      "AttnCov": {
+        "val_sharpe": 1.3519,
+        "test_sharpe": 1.9669,
+        "per_seed": [
+          [
+            1.12,
+            1.731
+          ],
+          [
+            1.491,
+            1.965
+          ],
+          [
+            0.731,
+            2.955
+          ],
+          [
+            1.852,
+            1.279
+          ],
+          [
+            1.565,
+            1.904
+          ]
+        ]
+      }
+    },
+    "loss_curve": {
+      "train": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "val": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.5,
+      2.0
+    ],
+    "train_time": [
+      5,
+      150
+    ]
+  }
+}
