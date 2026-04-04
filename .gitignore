@@ -1,3 +1,4 @@
 data/tensors.pt
 __pycache__/
 .venv/
+LOCK

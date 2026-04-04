@@ -23,8 +23,8 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 1. Read the current `train.py` and `experiments.md` (past results).
 2. Form a hypothesis. Write it as a comment at the top of `train.py`.
 3. Modify `train.py`. You may change anything: model architecture, optimizer, loss, hyperparameters.
-4. Run: `uv run train.py` — fixed 5-minute wall clock budget.
-5. Record result in `experiments.md`:
+4. Run: `uv run train.py` — fixed 5-minute wall clock budget. This auto-saves a card to `cards/exp_NNNN.json`.
+5. Record result in `experiments.md` (use same exp number as the card):
    ```
    ## Exp N: [short description]
    - Hypothesis: ...
@@ -46,7 +46,7 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 ## Dream Phase (AutoDream)
 
 Every 10 experiments, pause and "dream":
-1. Read all of `experiments.md`.
+1. Read all of `experiments.md` and `cards/*.json`.
 2. Extract patterns: what consistently helps, what consistently fails, what's untested.
 3. Write/update `insights.md` with distilled learnings.
 4. Before each new experiment, check `insights.md` — don't repeat known failures.
