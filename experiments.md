@@ -66,3 +66,21 @@
 - Change: patch_size=10, d_model=20, 6 patches
 - val_sharpe: 1.89 | test_sharpe: 1.06 | test_mdd: -1.9% | params: 3,402
 - Verdict: DISCARD (bigger patches lose granularity, more params overfit)
+
+## Exp 11: PatchTemporal 3-day patches (20 patches)
+- Hypothesis: Finer temporal resolution with 3-day patches.
+- Change: patch_size=3, 20 patches, d_model=16
+- val_sharpe: 1.77 | test_sharpe: 1.41 | test_mdd: -2.0% | params: 1,634
+- Verdict: DISCARD (more patches = more noise, 5-day optimal)
+
+## Exp 12: PatchTemporal + Sortino loss
+- Hypothesis: Sortino penalizes downside vol only, leads to better risk-adjusted returns.
+- Change: Sortino loss for training, Sharpe for eval
+- val_sharpe: 2.34 | test_sharpe: 1.60 | test_mdd: -1.9% | params: 1,826
+- Verdict: DISCARD (roughly equivalent to Sharpe loss)
+
+## Exp 13: PatchTemporal + causal masking + weight_decay=1e-3
+- Hypothesis: Causal mask enforces temporal causality, higher WD reduces overfitting.
+- Change: Causal attention mask, weight_decay 1e-3
+- val_sharpe: 2.36 | test_sharpe: 1.44 | test_mdd: -2.1% | params: 1,826
+- Verdict: KEEP (marginal improvement, causal mask + WD don't change much)

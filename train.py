@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Exp 10: PatchTemporal with 10-day patches (6 patches), d_model=20
-Hypothesis: Larger patches capture more context per token. 10-day = 2 weeks of trading.
-             Fewer patches (6 vs 12) means shorter sequence = less attention noise.
-             d_model=20 to compensate for reduced sequence length.
+Exp 13: PatchTemporal + causal masking + higher weight decay
+Hypothesis: Causal attention mask ensures each patch only attends to past patches,
+             enforcing temporal causality. Higher weight decay (1e-3 vs 1e-4) reduces
+             overfitting (exp7 had train=6.06 vs val=2.36 gap).
 """
 
 import time, math, numpy as np, torch, torch.nn as nn
 from pathlib import Path
 
-SEED = 42; WINDOW = 60; REBAL_FREQ = 5; PATCH_SIZE = 10
+SEED = 42; WINDOW = 60; REBAL_FREQ = 5; PATCH_SIZE = 5
 TRAIN_RATIO = 0.7; VAL_RATIO = 0.15
 LR = 3e-3; EPOCHS = 500
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
@@ -38,10 +38,9 @@ def compute_features(d):
 
 
 class PatchTemporalAllocator(nn.Module):
-    def __init__(self, n_assets, n_features, patch_size, d_model=20, dropout=0.2):
+    def __init__(self, n_assets, n_features, patch_size=5, d_model=16, dropout=0.2, causal=True):
         super().__init__()
-        self.patch_size = patch_size
-        self.d_model = d_model
+        self.patch_size = patch_size; self.d_model = d_model; self.causal = causal
         n_patches = WINDOW // patch_size
         self.patch_proj = nn.Linear(patch_size * n_features, d_model)
         self.pos_enc = nn.Parameter(torch.randn(1, n_patches, d_model) * 0.02)
@@ -52,14 +51,20 @@ class PatchTemporalAllocator(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.out = nn.Linear(d_model, 1)
         self.temp = nn.Parameter(torch.tensor(1.0))
+        # Causal mask
+        if causal:
+            mask = torch.triu(torch.ones(n_patches, n_patches), diagonal=1).bool()
+            self.register_buffer('mask', mask)
 
     def forward(self, x):
-        B, W, N, F = x.shape
-        P = self.patch_size; nP = W // P
+        B, W, N, F = x.shape; P = self.patch_size; nP = W // P
         x = x.reshape(B, nP, P, N, F).permute(0,3,1,2,4).reshape(B*N, nP, P*F)
         x = self.patch_proj(x) + self.pos_enc
         q,k,v = self.q(x), self.k(x), self.v(x)
-        attn = torch.softmax(q@k.transpose(-2,-1)/(self.d_model**0.5), dim=-1)
+        scores = q@k.transpose(-2,-1)/(self.d_model**0.5)
+        if self.causal:
+            scores = scores.masked_fill(self.mask, float('-inf'))
+        attn = torch.softmax(scores, dim=-1)
         attn = self.dropout(attn)
         x = self.norm(x + attn@v)
         x = x[:, -1].reshape(B, N, self.d_model)
@@ -91,40 +96,34 @@ def main():
     Xte,Yte = X[nt+nv:].to(DEVICE), Y[nt+nv:].to(DEVICE)
     print(f"Samples — train:{nt}, val:{nv}, test:{len(Xte)}")
 
-    model = PatchTemporalAllocator(N,F,patch_size=PATCH_SIZE,d_model=20,dropout=0.2).to(DEVICE)
+    model = PatchTemporalAllocator(N,F,patch_size=PATCH_SIZE,d_model=16,dropout=0.2,causal=True).to(DEVICE)
     np_ = sum(p.numel() for p in model.parameters()); print(f"Params: {np_}")
     if np_ > 25000: return
 
-    opt = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-4)
+    opt = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-3)  # Higher WD
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)
-
     best_vs, best_st, patience, noimp = -999, None, 80, 0
 
     for ep in range(EPOCHS):
         if time.time()-t0 > TIME_BUDGET: break
         model.train()
-        w = model(Xt); pr = (w*Yt).sum(-1)
-        loss = sharpe_loss(pr)
+        w = model(Xt); pr = (w*Yt).sum(-1); loss = sharpe_loss(pr)
         opt.zero_grad(); loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step(); sched.step()
-
         if ep % 5 == 0:
             model.eval()
             with torch.no_grad():
                 vs = -(sharpe_loss((model(Xv)*Yv).sum(-1)).item())
-                if vs > best_vs:
-                    best_vs = vs; best_st = {k:v.clone() for k,v in model.state_dict().items()}; noimp=0
+                if vs > best_vs: best_vs=vs; best_st={k:v.clone() for k,v in model.state_dict().items()}; noimp=0
                 else: noimp += 5
             if ep%50==0: print(f"Ep {ep:4d} | train:{-(loss.item()):.3f} | val:{vs:.3f}")
             if noimp >= patience: print(f"Early stop {ep}"); break
 
     model.load_state_dict(best_st); model.eval()
     with torch.no_grad():
-        wt = model(Xte); tr = (wt*Yte).sum(-1)
-        ts = -(sharpe_loss(tr).item())
-        cum=(1+tr).cumprod(0); pk=cum.cummax(0).values
-        mdd=((cum-pk)/pk).min().item()*100
+        wt=model(Xte); tr=(wt*Yte).sum(-1); ts=-(sharpe_loss(tr).item())
+        cum=(1+tr).cumprod(0); pk=cum.cummax(0).values; mdd=((cum-pk)/pk).min().item()*100
         ar=(cum[-1].item())**(252/(len(tr)*REBAL_FREQ))-1
         eqs=-(sharpe_loss((torch.ones(N,device=DEVICE)/N*Yte).sum(-1)).item())
         spys=-(sharpe_loss(Yte[:,0]).item())
@@ -132,13 +131,12 @@ def main():
     el=time.time()-t0
     print(f"\n{'='*50}")
     print(f"eq:{eqs:.3f} spy:{spys:.3f} val:{best_vs:.3f} test:{ts:.3f} mdd:{mdd:.1f}% ann:{ar*100:.1f}% p:{np_} t:{el:.0f}s")
-    print(f"{'='*50}")
 
     config={"model":"PatchTemporalAllocator","seed":SEED,"window":WINDOW,"rebal_freq":REBAL_FREQ,
             "lr":LR,"epochs":EPOCHS,"n_features":F,"features":feat_names,"n_assets":N,
             "n_params":np_,"train_samples":nt,"val_samples":nv,"test_samples":len(Xte),
-            "d_model":20,"n_heads":1,"dropout":0.2,"patch_size":PATCH_SIZE,
-            "attention_type":"temporal","pooling":"last_patch"}
+            "d_model":16,"n_heads":1,"dropout":0.2,"patch_size":PATCH_SIZE,
+            "causal":True,"weight_decay":1e-3,"attention_type":"temporal","pooling":"last_patch"}
     results={"val_sharpe":round(best_vs,4),"test_sharpe":round(ts,4),"test_mdd":round(mdd,2),
              "test_ann_return":round(ar*100,2),"elapsed_sec":round(el,1),
              "benchmark_equal_weight_sharpe":round(eqs,4),"benchmark_spy_sharpe":round(spys,4)}
