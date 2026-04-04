@@ -1,90 +1,71 @@
 # Philosophy
 
-## Why Attention for Asset Allocation?
-- Attention weights = implicit regime encoding. No categorical labels (bull/bear/sideways).
-- End-to-end: data → portfolio weights directly. No predict-then-optimize pipeline.
-- Softmax output = fully invested long-only allocation.
+## THE MISSION (inviolable)
 
-## Design Principles
-1. **Data-honest**: ~5,000 independent time points. Model must be ≤25K params (ratio ≥2:1).
-2. **Simplicity**: Karpathy MicroGPT philosophy. Strip everything unnecessary.
-3. **Price-based features only**: No lagging macro (CPI/GDP = dead values when ffilled to daily). Use VIX, credit spread, yield curve, momentum, vol — all derivable from price.
-4. **Dual Attention**: Spatial (feature↔feature cross-correlation) + Temporal (time patterns). Single attention only captures one axis.
-5. **Patching**: Compress days into patches (e.g., 5-day). Reduces sequence length, preserves local patterns.
-6. **Modern building blocks**: RoPE, SwiGLU, RMSNorm — free upgrades from LLM research.
+**Build an attention-based model that implicitly learns market regimes through its attention weights and outputs optimal asset allocation weights end-to-end.**
 
-## Data Scarcity is the Core Problem (Lesson from Round 1-2)
-- 620 samples with 692 params = model finishes in 1 second. 5-minute budget wasted.
-- Transformer needs meaningful data volume. 1-second training = not real training.
-- MUST solve data scarcity before concluding "attention doesn't work":
-  - REBAL_FREQ=1 (daily) → 620 → ~3100 samples
-  - Sliding window with stride 1 (overlapping) → more samples
-  - Cross-asset sample multiplication (each asset as independent example where applicable)
-  - Data augmentation: time-shift, noise injection, bootstrap
-- If training finishes in < 60 seconds, the model is undertrained OR data is too small. Fix it.
-- The agent must detect and fix this autonomously — do not wait for human input.
+This is the entire reason this project exists. Everything below serves this mission.
 
-## Training Diagnostics (MUST check before looking at test)
-- **First look at loss curves, not test Sharpe:**
-  1. train_loss falling? If not → model isn't learning. Fix architecture/lr.
-  2. val_loss falling too? If not → overfitting. Stop here, don't even check test.
-  3. Both converging → THEN look at test_sharpe as final OOS evaluation.
-- Record train_loss and val_loss at [epoch 0, 25%, 50%, 75%, final] in the card.
-- If train_loss falls but val_loss rises → early stopping should have kicked in. Check patience.
+### What this means concretely:
+1. The model MUST contain attention mechanism(s).
+2. Attention weights MUST operate over a time dimension (not collapsed by mean/sum).
+3. The model takes raw time-series as input and outputs portfolio weights via softmax.
+4. Regime detection is implicit — encoded in how attention weights shift over time. No categorical regime labels.
+5. The model must learn WHEN to allocate WHERE — temporal dynamics, not static feature averages.
 
-## Overfitting is the Enemy (Lesson from Round 1)
-- val_sharpe↑ while test_sharpe↓ = overfitting. The simplest MLP (692 params) had best test_sharpe (3.94).
-- Primary metric: **test_sharpe** (not val_sharpe). Val is for early stopping only.
-- Secondary: **val-test gap** — minimize it. Gap > 1.0 = suspicious.
-- Goal: beat Equal Weight benchmark on TEST set (EW test_sharpe ≈ 2.76).
+### What is NOT acceptable:
+- Models without attention (MLP, Linear, MinVar, etc.) are BENCHMARKS, not solutions.
+- A benchmark beating the attention model does NOT mean "give up on attention." It means the attention model needs more work.
+- Collapsing the time axis (mean, sum, last) before the attention layer defeats the purpose. The attention must SEE the time series.
+- Declaring the project "solved" by a non-attention method.
 
-## Complexity Must Be Earned
-- Baseline: Linear (DLinear). If attention can't beat linear, it's not needed.
-- Add complexity one step at a time: Linear → MLP → Single Attention → Dual Attention
-- Each step must show val_sharpe improvement. No improvement = revert to simpler.
-- Ref: "Are Transformers Effective for Time Series Forecasting?" (Zeng 2023, AAAI)
+## Design Principles (under the mission)
 
-## What to Explore
-- Attention order: spatial→temporal vs temporal→spatial vs interleaved
-- Patch size: 3, 5, 10 days
-- Loss: -Sharpe, -Sharpe + turnover penalty, CVaR
-- Architecture alternatives: MLP-Mixer, pure temporal-only, pure spatial-only
+1. **Simplicity serves the mission**: Strip unnecessary complexity FROM THE ATTENTION MODEL. Don't replace attention with something simpler. Make the attention architecture itself as clean as possible.
+2. **Data-honest**: ≤25K params. If data is insufficient for the current architecture, fix the data problem (more assets, higher frequency, augmentation) — don't abandon the architecture.
+3. **Price-based features only**: No lagging macro indicators.
+4. **Dual Attention**: Spatial (cross-asset) + Temporal (time patterns). Test both orders and interleaved.
+5. **Patching**: Compress days into patches to give temporal attention meaningful chunks.
 
-## Data Integrity
-- **Look-ahead bias**: Only use information available at decision time.
-  - Market-traded prices (VIX, yields, ETF prices): same-day OK (known at close).
-  - Monthly macro (CPI, GDP, unemployment): +30 day publication lag minimum.
-  - Weekly macro (jobless claims): +7 day lag.
-  - Never use future returns in feature computation.
-- **Survivorship bias**: All 17 ETFs still trade today. If adding new assets, verify listing date.
-- **Z-score normalization**: Must be expanding window (train only), never full-sample.
-- **Walk-forward**: Train on past, validate on unseen future. No shuffling. Time order sacred.
-  - Phase 1 (current): Single sequential split (70/15/15). Simple and fast.
-  - Phase 2 (later): Rolling window retrain for robustness check.
-- **Rebalancing cost**: Assume 5bps per turnover as baseline. Turnover penalty in loss reflects this.
-- **Suspiciously good results**: If val_sharpe > 2.0, assume bug until proven otherwise. Check:
-  1. Is future data leaking into features? (z-score, returns)
-  2. Is the model just memorizing a few samples?
-  3. Is turnover unrealistically high? (free lunch = no free lunch)
-  4. Does it degrade on a different time split?
-  5. Compare with equal weight — if model Sharpe >> EW Sharpe, something is wrong.
-  6. Check IS (train) vs OOS (val/test) gap — if train_sharpe >> val_sharpe, it's overfitting, not alpha.
+## Data Scarcity is a Problem to SOLVE, Not a Reason to Quit
+
+If 839 samples aren't enough for attention to learn:
+- Increase rebalancing frequency (daily = ~3100 samples)
+- Expand asset universe (more cross-sectional variation)
+- Data augmentation (noise injection, bootstrap, time-shift)
+- Reduce model size further
+- Try different input representations
+
+"Not enough data" is NEVER a valid final conclusion. It's a problem statement.
+
+## Evaluation
+
+- Primary metric: val_sharpe (for model selection), test_sharpe (for final judgment)
+- Benchmarks (for comparison only, NOT targets to beat): Equal Weight, MinVar, MLP
+- A model with lower Sharpe than MinVar but valid attention-based regime detection is MORE valuable than MinVar — because it can improve with more data. MinVar cannot.
+- Secondary: visualize attention weights across different market periods. Do they change? Do they make sense?
+
+## Regime Detection Quality (must report)
+
+Every attention experiment MUST include in its card:
+- Attention weight visualization or summary statistics across 3+ distinct market periods
+- Weight entropy: does it change over time? (static attention = not learning regimes)
+- Portfolio composition shift: does allocation change meaningfully between calm and volatile periods?
 
 ## What NOT to Do
 - No models >25K params
 - No external macro data as input features
 - No two-stage predict→optimize
 - No categorical regime labels
-- No overfitting excuses — walk-forward is the judge
+- No declaring victory with non-attention models
 
 ## Key References
-- iTransformer (ICLR 2024): variables-as-tokens = our spatial attention
-- PatchTST (ICLR 2023): patching time series
+- iTransformer (ICLR 2024): variables-as-tokens = spatial attention
+- PatchTST (ICLR 2023): patching time series for temporal attention
 - Crossformer (ICLR 2023): two-stage cross-time/cross-variable
 - Signature-Informed Transformer (2026): end-to-end CVaR, path signatures
-- Portfolio Transformer (2022): direct allocation, ETF 7개 with similar data size
+- Portfolio Transformer (2022): direct allocation, 7 ETFs
 
 ## Data
-- 17 ETFs × ~21yr daily (SPY, QQQ, IWM, EFA, VEA, VWO, EEM, TLT, IEF, SHY, TIP, HYG, GLD, DBC, USO, VNQ, UUP)
-- 10 features: VIX, VIX Δ5d, SPY-TLT corr 20d, 10Y-2Y spread, 10Y Δ20d, HYG-TLT spread, SPY/200MA, GLD/SPY Δ20d, momentum, realized vol
+- 17 ETFs × ~21yr daily
 - Platform: Mac Mini M4, 32GB, MPS backend

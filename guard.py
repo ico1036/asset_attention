@@ -66,8 +66,30 @@ def check_card(card_path):
     if not (SANE_TEST_RANGE[0] <= test_s <= SANE_TEST_RANGE[1]):
         issues.append(f"🚨 INSANE test_sharpe={test_s:.2f} outside [{SANE_TEST_RANGE[0]}, {SANE_TEST_RANGE[1]}]")
 
-    # Complexity step check: improvement > 100% over previous best is suspicious
-    # (legitimate improvements are usually incremental)
+    # ═══ MISSION ENFORCEMENT ═══
+    # The model MUST be attention-based and preserve time dimension.
+    model_name = config.get("model", "").lower()
+    has_attention = config.get("has_attention", False)
+    preserves_time = config.get("preserves_time", False)
+
+    # Check model name for non-attention models
+    non_attention_keywords = ["linear", "mlp", "minvar", "heuristic", "equal", "inverse", "hrp", "riskparity"]
+    is_benchmark = any(kw in model_name for kw in non_attention_keywords)
+
+    if is_benchmark and n_params == 0:
+        # Analytical benchmarks are OK but must be labeled as such
+        issues.append(f"ℹ️ BENCHMARK model ({model_name}). Not an attention experiment.")
+    elif not has_attention and n_params > 0:
+        issues.append(f"🚨 MISSION VIOLATION: model '{model_name}' has no attention mechanism. "
+                       f"Set config['has_attention']=True if it does, or redesign with attention.")
+    if has_attention and not preserves_time:
+        issues.append(f"🚨 MISSION VIOLATION: attention model but time dimension collapsed. "
+                       f"Attention must see sequential time steps (patches, raw days).")
+
+    # Check for regime signal reporting
+    if has_attention and "regime_signal" not in config:
+        issues.append(f"⚠️ MISSING: config must include 'regime_signal' describing how attention weights "
+                       f"change across market periods.")
 
     # Auto verdict
     prev_best = None
