@@ -1,0 +1,32 @@
+{
+  "exp": 50,
+  "timestamp": "2026-04-04T15:55:04.482784",
+  "config": {
+    "model": "DualAttentionAllocator_noise",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "stride": 5,
+    "lr": 0.001,
+    "d_model": 16,
+    "patch_size": 5,
+    "n_patches": 12,
+    "n_features": 10,
+    "n_assets": 17,
+    "n_params": 2530,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "noise_std": 0.1,
+    "attention_order": "temporal\u2192spatial"
+  },
+  "results": {
+    "val_sharpe": 1.4996,
+    "test_sharpe": 1.424,
+    "test_mdd": -1.87,
+    "test_ann_return": 1.14,
+    "elapsed_sec": 45.2,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "val_test_gap": 0.08,
+    "train_sharpe": 1.87
+  }
+}

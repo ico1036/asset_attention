@@ -1,0 +1,21 @@
+{
+  "exp": 53,
+  "timestamp": "2026-04-04T15:58:19.320775",
+  "config": {
+    "model": "MLPAttentionCross",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "stride": 5,
+    "n_params": 443,
+    "noise_std": 0.1
+  },
+  "results": {
+    "val_sharpe": 2.2851,
+    "test_sharpe": 1.9756,
+    "test_mdd": -1.63,
+    "elapsed_sec": 8.9,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "val_test_gap": 0.31
+  }
+}

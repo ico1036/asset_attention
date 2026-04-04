@@ -1,0 +1,29 @@
+{
+  "exp": 52,
+  "timestamp": "2026-04-04T15:57:34.597424",
+  "config": {
+    "model": "MLPMixerAllocator_noise",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "stride": 5,
+    "lr": 0.003,
+    "n_features": 10,
+    "n_assets": 17,
+    "n_params": 1306,
+    "d_hidden": 32,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "noise_std": 0.1
+  },
+  "results": {
+    "val_sharpe": 1.5587,
+    "test_sharpe": 1.3384,
+    "test_mdd": -3.4,
+    "test_ann_return": 1.45,
+    "elapsed_sec": 7.8,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "val_test_gap": 0.22,
+    "train_sharpe": 5.21
+  }
+}

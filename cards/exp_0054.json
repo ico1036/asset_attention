@@ -1,0 +1,20 @@
+{
+  "exp": 54,
+  "timestamp": "2026-04-04T16:06:43.824617",
+  "config": {
+    "model": "MLPAllocator_GELU_noise_SWA",
+    "seed": 42,
+    "n_params": 692,
+    "swa_start": 1000,
+    "swa_lr": 0.001,
+    "noise_std": 0.1
+  },
+  "results": {
+    "val_sharpe": 0.9166,
+    "test_sharpe": 1.8179,
+    "test_mdd": -0.92,
+    "elapsed_sec": 32.8,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "pre_swa_val": 1.8515
+  }
+}

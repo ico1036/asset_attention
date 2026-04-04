@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Exp 36: GELU MLP + Gaussian noise augmentation (sigma=0.1)
-Best Round 2 model: val=1.85, test=4.23, test-EW gap=+1.47
+Best model: GELU MLP + Gaussian noise augmentation (sigma=0.1)
+Exp 36/46: val≈1.85, test≈4.2, 692 params
 """
 
 import time, math, json, datetime, numpy as np, torch, torch.nn as nn

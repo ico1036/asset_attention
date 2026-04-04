@@ -1,0 +1,42 @@
+{
+  "exp": 41,
+  "timestamp": "2026-04-04T15:46:16.695325",
+  "config": {
+    "model": "LinearAllocator",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 1,
+    "stride": 1,
+    "lr": 0.003,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 318,
+    "batch_size": 256,
+    "weight_decay": 0.001,
+    "noise_std": 0.0
+  },
+  "results": {
+    "val_sharpe": 0.3245,
+    "test_sharpe": 1.273,
+    "test_mdd": -9.93,
+    "test_ann_return": 11.02,
+    "elapsed_sec": 2.3,
+    "benchmark_equal_weight_sharpe": 1.3626,
+    "val_test_gap": -0.95,
+    "train_samples": 3105,
+    "val_samples": 665,
+    "test_samples": 667
+  }
+}

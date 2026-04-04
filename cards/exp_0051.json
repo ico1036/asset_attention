@@ -1,0 +1,28 @@
+{
+  "exp": 51,
+  "timestamp": "2026-04-04T15:56:48.764574",
+  "config": {
+    "model": "MLPAllocator_GELU_noise_split_test",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "stride": 5,
+    "split": "60/20/20",
+    "n_features": 10,
+    "n_assets": 17,
+    "n_params": 692,
+    "noise_std": 0.1
+  },
+  "results": {
+    "val_sharpe": 1.8892,
+    "test_sharpe": 2.4699,
+    "test_mdd": -1.96,
+    "test_ann_return": 1.74,
+    "elapsed_sec": 8.1,
+    "benchmark_equal_weight_sharpe": 2.2686,
+    "val_test_gap": -0.58,
+    "train_samples": 532,
+    "val_samples": 177,
+    "test_samples": 178
+  }
+}

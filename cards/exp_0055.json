@@ -1,0 +1,75 @@
+{
+  "exp": 55,
+  "timestamp": "2026-04-04T16:07:48.998209",
+  "config": {
+    "model": "MLPAllocator_multi_seed_analysis",
+    "seeds": [
+      42,
+      7,
+      13,
+      99,
+      256
+    ],
+    "noise_std": 0.1
+  },
+  "results": {
+    "ew_test_sharpe": 2.755,
+    "per_seed": {
+      "42": {
+        "val": 1.837,
+        "test": 4.162,
+        "top_alloc": {
+          "SHY": 40.6,
+          "UUP": 12.5,
+          "QQQ": 11.8,
+          "IEF": 11.6,
+          "HYG": 11.1
+        }
+      },
+      "7": {
+        "val": 0.622,
+        "test": 2.737,
+        "top_alloc": {
+          "TLT": 7.1,
+          "VWO": 6.9,
+          "VEA": 6.8,
+          "UUP": 6.5,
+          "EEM": 6.4
+        }
+      },
+      "13": {
+        "val": 1.404,
+        "test": 2.471,
+        "top_alloc": {
+          "IEF": 48.3,
+          "GLD": 13.6,
+          "QQQ": 12.1,
+          "USO": 6.4,
+          "TLT": 6.1
+        }
+      },
+      "99": {
+        "val": 0.716,
+        "test": 2.763,
+        "top_alloc": {
+          "SPY": 7.4,
+          "TLT": 6.9,
+          "GLD": 6.8,
+          "TIP": 6.6,
+          "EFA": 6.3
+        }
+      },
+      "256": {
+        "val": 1.354,
+        "test": 2.867,
+        "top_alloc": {
+          "SHY": 54.2,
+          "QQQ": 11.4,
+          "SPY": 9.1,
+          "HYG": 8.6,
+          "IEF": 7.9
+        }
+      }
+    }
+  }
+}

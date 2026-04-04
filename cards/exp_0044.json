@@ -1,0 +1,47 @@
+{
+  "exp": 44,
+  "timestamp": "2026-04-04T15:48:35.828346",
+  "config": {
+    "model": "PatchTemporalAllocator",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 1,
+    "stride": 1,
+    "lr": 0.001,
+    "d_model": 16,
+    "patch_size": 5,
+    "n_patches": 12,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 1988,
+    "batch_size": 128,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "noise_std": 0.1
+  },
+  "results": {
+    "val_sharpe": 0.2486,
+    "test_sharpe": 1.1717,
+    "test_mdd": -11.57,
+    "test_ann_return": 11.78,
+    "elapsed_sec": 5.6,
+    "benchmark_equal_weight_sharpe": 1.3626,
+    "val_test_gap": -0.92,
+    "train_sharpe": 0.52,
+    "train_samples": 3105,
+    "val_samples": 665,
+    "test_samples": 667
+  }
+}

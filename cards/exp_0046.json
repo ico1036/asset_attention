@@ -1,0 +1,47 @@
+{
+  "exp": 46,
+  "timestamp": "2026-04-04T15:50:11.531879",
+  "config": {
+    "model": "MLPAllocator_GELU_noise_warmrestart",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "stride": 5,
+    "lr": 0.003,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "hidden_dim": 32,
+    "dropout": 0.3,
+    "batch_size": "full",
+    "weight_decay": 0.001,
+    "activation": "GELU",
+    "noise_std": 0.1,
+    "scheduler": "CosineWarmRestarts_T0=500_Tmult=2"
+  },
+  "results": {
+    "val_sharpe": 1.8374,
+    "test_sharpe": 4.1616,
+    "test_mdd": -0.75,
+    "test_ann_return": 1.62,
+    "elapsed_sec": 3.3,
+    "benchmark_equal_weight_sharpe": 2.7554,
+    "val_test_gap": -2.32,
+    "train_sharpe": 4.75,
+    "train_samples": 620,
+    "val_samples": 133,
+    "test_samples": 134
+  }
+}
