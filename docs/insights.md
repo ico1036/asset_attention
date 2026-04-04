@@ -46,8 +46,27 @@ With 839 samples, any model >500 params overfits. Daily rebalancing gives ~4600 
 - Would temporal self-attention (PatchTST-style) work better than cross-attention?
 - Is the expanding window approach causing the model to be trained on too little data in early years?
 
+## Round 7, Batch 2 (Exp 0005-0008) — Critic Verdict: REVISE
+
+### What we learned
+- **Static ablation: attention adds ~0.2 Sharpe** (0.652 → 0.87). Small but real.
+- **Multi-seed: CrossAttention is robust.** 0.869 ± 0.030 across 5 seeds. Not a seed artifact.
+- **PatchSelfAttention (mean pool) = dead.** Mean pooling after attention destroys temporal signal. Zero regime signal.
+- **iTransformer is best architecture so far.** test_sharpe 0.904 with asset embeddings + temporal self-attention. But regime signal still near-zero — it found better STATIC weights (overweight SPY), not regime dynamics.
+- **All attention models: MDD -40 to -48%.** Static ablation: -31.6%. Attention makes drawdowns WORSE.
+
+### ⚠️ Critic Corrections (MUST address before next batch)
+1. **Diagnose EW gap (0.9 vs 1.39).** Run per-year comparison. Hypothesis: early years with small training sets drag aggregate. Consider minimum training window or warm-start.
+2. **Investigate MDD.** Print weights and returns during max drawdown for Exp 0008. Why -42%?
+3. **Combine entropy reg + iTransformer.** Best architecture + best regularization. Measure crisis-calm diff honestly.
+4. **Try warm-start** (initialize from prior year's model instead of cold-start each year).
+5. **Report EW's MDD** as benchmark.
+
+### Key insight
+The EW underperformance may be a **training protocol problem**, not an attention problem. Expanding window with tiny initial training sets produces bad models for early years, dragging aggregate Sharpe. This must be investigated.
+
 ## Next Hypotheses (after addressing Critic)
-1. **Static ablation first** — establish if attention adds ANY value
-2. **Daily rebal exploration** — ~4600 samples vs current setup
-3. **PatchTST self-attention** instead of cross-attention — richer temporal modeling
-4. **GRN gating** (from Portfolio Transformer) — adaptive complexity for small data
+1. **Diagnose per-year Sharpe vs EW** — find where the gap comes from
+2. **iTransformer + entropy reg** — combine best architecture with best regularization trick
+3. **Warm-start training** — carry model weights across expanding windows
+4. **Minimum training window** — don't start until enough data exists (e.g., 5+ years)
