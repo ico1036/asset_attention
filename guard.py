@@ -21,10 +21,14 @@ def check_card(card_path):
     if n_params > MAX_PARAMS:
         issues.append(f"❌ PARAMS: {n_params:,} > {MAX_PARAMS:,} limit")
 
-    # Training time guard
+    # Training time guard — expected time scales with complexity
     elapsed = results.get("elapsed_sec", 0)
-    if elapsed < MIN_TRAIN_TIME:
-        issues.append(f"⚠️ FAST: {elapsed:.0f}s < {MIN_TRAIN_TIME}s minimum. Model undertrained or data too small.")
+    n_samples = config.get("train_samples", 620)
+    # Rough estimate: 1K params × 1K samples × 500 epochs ≈ 30s on MPS
+    # Scale linearly with params and samples
+    expected_min = max(MIN_TRAIN_TIME, (n_params * n_samples) / (1000 * 1000) * 30)
+    if elapsed < expected_min * 0.3:  # less than 30% of expected = something wrong
+        issues.append(f"⚠️ TOO FAST: {elapsed:.0f}s vs expected ~{expected_min:.0f}s for {n_params} params × {n_samples} samples. Undertrained or data too small.")
 
     # Suspiciously good
     val_s = results.get("val_sharpe", 0)
