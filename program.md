@@ -29,7 +29,10 @@ uv run prepare.py   # builds tensors from parquet, ~10s
    ```
 3. Modify `train.py`. You may change anything: model architecture, optimizer, loss, hyperparameters.
 4. Run: `uv run guard.py` (NOT train.py directly) — this runs train.py + enforces hard checks. Never bypass guard.py.
-   Add model-specific details to the config dict in train.py (e.g., n_layers, d_model, n_heads, attention_order).
+   Add to the config dict in train.py:
+   - Model details (n_layers, d_model, n_heads, attention_order)
+   - `loss_curve: {"train": [...], "val": [...]}` — sample at [0%, 25%, 50%, 75%, 100%] of training
+   - `expected: {"val_sharpe": [lo, hi], "train_time": [lo, hi]}` — your prediction before running
 5. Record result in `experiments.md` (use same exp number as the card):
    ```
    ## Exp N: [short description]
@@ -49,10 +52,12 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 - Always remove LOCK on exit, even on error (use try/finally).
 
 ## Self-Diagnosis (run before every experiment)
-- If last experiment finished in < 60s: data is too small or model too simple. Fix data pipeline first.
+- Read `insights.md` first — it overrides generic rules with learned lessons.
+- If last experiment finished too fast (see guard.py estimates): investigate why. Check insights.md for known causes before changing data pipeline.
 - If val-test gap > 1.5: overfitting. Add regularization or reduce model.
 - If val_sharpe > 2.0: suspect bug. Run sanity checks per philosophy.md.
 - If all seeds except one give poor results: seed-dependent, not real alpha.
+- If insights.md says "no further improvement possible" and you agree after review: stop early. Report conclusion. Don't run experiments just to fill the quota.
 - Do NOT ask the human. Diagnose and fix autonomously.
 
 ## Rules
