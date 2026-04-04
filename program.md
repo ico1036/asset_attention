@@ -81,7 +81,12 @@ from prepare import (
 - If val-test gap > 1.5: overfitting → reduce model or add regularization.
 - If training finishes in < 30s with >0 params: data pipeline or model too small.
 - If attention weights are static across all periods: the model isn't learning regimes. Change architecture.
-- NEVER give up on attention. If stuck, try: different patch size, different attention order, different input representation, data augmentation.
+- NEVER give up on attention. If stuck, GET CREATIVE:
+  - Invent new attention variants (sparse, linear, cross-attention, prototype queries)
+  - Hybrid architectures (state-space + attention gate, conv + attention)
+  - Novel input representations (signatures, wavelet patches, learned tokenization)
+  - Unconventional losses (contrastive regime loss, attention entropy regularization)
+  - The constraint is "attention over time for regime learning." HOW is wide open.
 
 ## Rules
 - Only modify `train.py`. Never touch `prepare.py` or `guard.py`.

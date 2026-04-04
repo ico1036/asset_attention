@@ -19,6 +19,11 @@ This is the entire reason this project exists. Everything below serves this miss
 - Collapsing the time axis (mean, sum, last) before the attention layer defeats the purpose. The attention must SEE the time series.
 - Declaring the project "solved" by a non-attention method.
 
+### Creativity is encouraged:
+- You are NOT limited to vanilla Transformer attention. Invent new attention variants if needed.
+- Cross-attention, sparse attention, linear attention, state-space hybrids with attention gates, learned query prototypes — anything goes as long as the core mechanism attends over time and learns regime-like patterns.
+- If standard approaches hit a wall, THINK DIFFERENTLY. The goal is regime-aware allocation via learned temporal attention — how you get there is open.
+
 ## Design Principles (under the mission)
 
 1. **Simplicity serves the mission**: Strip unnecessary complexity FROM THE ATTENTION MODEL. Don't replace attention with something simpler. Make the attention architecture itself as clean as possible.
