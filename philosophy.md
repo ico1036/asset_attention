@@ -43,6 +43,7 @@
   3. Is turnover unrealistically high? (free lunch = no free lunch)
   4. Does it degrade on a different time split?
   5. Compare with equal weight — if model Sharpe >> EW Sharpe, something is wrong.
+  6. Check IS (train) vs OOS (val/test) gap — if train_sharpe >> val_sharpe, it's overfitting, not alpha.
 
 ## What NOT to Do
 - No models >25K params
