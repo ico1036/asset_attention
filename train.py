@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Exp 7: Temporal attention with patching (5-day patches, 12 patches from 60-day window)
-Hypothesis: Mean-pooling the window destroys temporal structure. Patching + temporal
-             self-attention (PatchTST-style) preserves time patterns (regime changes,
-             momentum shifts). Per-asset temporal processing → cross-asset output.
+Exp 10: PatchTemporal with 10-day patches (6 patches), d_model=20
+Hypothesis: Larger patches capture more context per token. 10-day = 2 weeks of trading.
+             Fewer patches (6 vs 12) means shorter sequence = less attention noise.
+             d_model=20 to compensate for reduced sequence length.
 """
 
 import time, math, numpy as np, torch, torch.nn as nn
 from pathlib import Path
 
-SEED = 42; WINDOW = 60; REBAL_FREQ = 5; PATCH_SIZE = 5
+SEED = 42; WINDOW = 60; REBAL_FREQ = 5; PATCH_SIZE = 10
 TRAIN_RATIO = 0.7; VAL_RATIO = 0.15
 LR = 3e-3; EPOCHS = 500
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
@@ -38,51 +38,32 @@ def compute_features(d):
 
 
 class PatchTemporalAllocator(nn.Module):
-    """Per-asset: patch → temporal self-attention → score. Cross-asset softmax."""
-    def __init__(self, n_assets, n_features, patch_size=5, d_model=16, dropout=0.2):
+    def __init__(self, n_assets, n_features, patch_size, d_model=20, dropout=0.2):
         super().__init__()
         self.patch_size = patch_size
         self.d_model = d_model
-        # Patch embedding: (patch_size * n_features) → d_model
+        n_patches = WINDOW // patch_size
         self.patch_proj = nn.Linear(patch_size * n_features, d_model)
-        # Learnable position encoding
-        n_patches = WINDOW // patch_size  # 12
         self.pos_enc = nn.Parameter(torch.randn(1, n_patches, d_model) * 0.02)
-        # Temporal self-attention
         self.q = nn.Linear(d_model, d_model, bias=False)
         self.k = nn.Linear(d_model, d_model, bias=False)
         self.v = nn.Linear(d_model, d_model, bias=False)
         self.norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
-        # Output: pool temporal → per-asset score
         self.out = nn.Linear(d_model, 1)
         self.temp = nn.Parameter(torch.tensor(1.0))
 
     def forward(self, x):
-        # x: (B, W, N, F)
         B, W, N, F = x.shape
-        P = self.patch_size
-        n_patches = W // P
-
-        # Reshape to patches: (B, n_patches, N, P*F)
-        x = x.reshape(B, n_patches, P, N, F)
-        x = x.permute(0, 3, 1, 2, 4)  # (B, N, n_patches, P, F)
-        x = x.reshape(B * N, n_patches, P * F)
-
-        # Patch embedding + position
-        x = self.patch_proj(x) + self.pos_enc  # (B*N, n_patches, d_model)
-
-        # Temporal self-attention
-        q, k, v = self.q(x), self.k(x), self.v(x)
-        attn = torch.softmax(q @ k.transpose(-2,-1) / (self.d_model**0.5), dim=-1)
+        P = self.patch_size; nP = W // P
+        x = x.reshape(B, nP, P, N, F).permute(0,3,1,2,4).reshape(B*N, nP, P*F)
+        x = self.patch_proj(x) + self.pos_enc
+        q,k,v = self.q(x), self.k(x), self.v(x)
+        attn = torch.softmax(q@k.transpose(-2,-1)/(self.d_model**0.5), dim=-1)
         attn = self.dropout(attn)
-        x = self.norm(x + attn @ v)
-
-        # Pool over patches (use last patch = most recent)
-        x = x[:, -1]  # (B*N, d_model)
-        x = x.reshape(B, N, self.d_model)
-
-        logits = self.out(x).squeeze(-1)  # (B, N)
+        x = self.norm(x + attn@v)
+        x = x[:, -1].reshape(B, N, self.d_model)
+        logits = self.out(x).squeeze(-1)
         return torch.softmax(logits / self.temp.abs().clamp(min=0.1), dim=-1)
 
 
@@ -110,7 +91,7 @@ def main():
     Xte,Yte = X[nt+nv:].to(DEVICE), Y[nt+nv:].to(DEVICE)
     print(f"Samples — train:{nt}, val:{nv}, test:{len(Xte)}")
 
-    model = PatchTemporalAllocator(N,F,patch_size=PATCH_SIZE,d_model=16,dropout=0.2).to(DEVICE)
+    model = PatchTemporalAllocator(N,F,patch_size=PATCH_SIZE,d_model=20,dropout=0.2).to(DEVICE)
     np_ = sum(p.numel() for p in model.parameters()); print(f"Params: {np_}")
     if np_ > 25000: return
 
@@ -156,7 +137,7 @@ def main():
     config={"model":"PatchTemporalAllocator","seed":SEED,"window":WINDOW,"rebal_freq":REBAL_FREQ,
             "lr":LR,"epochs":EPOCHS,"n_features":F,"features":feat_names,"n_assets":N,
             "n_params":np_,"train_samples":nt,"val_samples":nv,"test_samples":len(Xte),
-            "d_model":16,"n_heads":1,"dropout":0.2,"patch_size":PATCH_SIZE,
+            "d_model":20,"n_heads":1,"dropout":0.2,"patch_size":PATCH_SIZE,
             "attention_type":"temporal","pooling":"last_patch"}
     results={"val_sharpe":round(best_vs,4),"test_sharpe":round(ts,4),"test_mdd":round(mdd,2),
              "test_ann_return":round(ar*100,2),"elapsed_sec":round(el,1),

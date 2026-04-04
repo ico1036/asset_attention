@@ -37,6 +37,12 @@
   - Phase 1 (current): Single sequential split (70/15/15). Simple and fast.
   - Phase 2 (later): Rolling window retrain for robustness check.
 - **Rebalancing cost**: Assume 5bps per turnover as baseline. Turnover penalty in loss reflects this.
+- **Suspiciously good results**: If val_sharpe > 2.0, assume bug until proven otherwise. Check:
+  1. Is future data leaking into features? (z-score, returns)
+  2. Is the model just memorizing a few samples?
+  3. Is turnover unrealistically high? (free lunch = no free lunch)
+  4. Does it degrade on a different time split?
+  5. Compare with equal weight — if model Sharpe >> EW Sharpe, something is wrong.
 
 ## What NOT to Do
 - No models >25K params
