@@ -13,6 +13,17 @@
 5. **Patching**: Compress days into patches (e.g., 5-day). Reduces sequence length, preserves local patterns.
 6. **Modern building blocks**: RoPE, SwiGLU, RMSNorm — free upgrades from LLM research.
 
+## Data Scarcity is the Core Problem (Lesson from Round 1-2)
+- 620 samples with 692 params = model finishes in 1 second. 5-minute budget wasted.
+- Transformer needs meaningful data volume. 1-second training = not real training.
+- MUST solve data scarcity before concluding "attention doesn't work":
+  - REBAL_FREQ=1 (daily) → 620 → ~3100 samples
+  - Sliding window with stride 1 (overlapping) → more samples
+  - Cross-asset sample multiplication (each asset as independent example where applicable)
+  - Data augmentation: time-shift, noise injection, bootstrap
+- If training finishes in < 60 seconds, the model is undertrained OR data is too small. Fix it.
+- The agent must detect and fix this autonomously — do not wait for human input.
+
 ## Overfitting is the Enemy (Lesson from Round 1)
 - val_sharpe↑ while test_sharpe↓ = overfitting. The simplest MLP (692 params) had best test_sharpe (3.94).
 - Primary metric: **test_sharpe** (not val_sharpe). Val is for early stopping only.

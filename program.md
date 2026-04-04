@@ -43,6 +43,13 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 - Or stop when time budget (e.g., 3 hours) is reached.
 - Always remove LOCK on exit, even on error (use try/finally).
 
+## Self-Diagnosis (run before every experiment)
+- If last experiment finished in < 60s: data is too small or model too simple. Fix data pipeline first.
+- If val-test gap > 1.5: overfitting. Add regularization or reduce model.
+- If val_sharpe > 2.0: suspect bug. Run sanity checks per philosophy.md.
+- If all seeds except one give poor results: seed-dependent, not real alpha.
+- Do NOT ask the human. Diagnose and fix autonomously.
+
 ## Rules
 - Only modify `train.py`. Never touch `prepare.py`.
 - `train.py` may read any file in `data/` (parquets, tensors, metadata). This is not "modifying prepare.py".
