@@ -65,7 +65,12 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 When `philosophy.md`, `program.md`, or `prepare.py` changes:
 1. Mentally simulate 5 experiments + 1 Dream step-by-step.
 2. At each step, ask: "Can I do this? Is something missing? Will it break?"
-3. Fix any issues found before running real experiments.
+3. **Quantitative sanity check**:
+   - Estimate training time: n_samples × n_params × epochs → will it fill the time budget?
+   - If estimated time < 30s: data pipeline or model size needs fixing BEFORE experiments.
+   - Check data/param ratio: samples/params < 5 = overfitting guaranteed.
+   - Check if val/test split sizes are statistically meaningful (< 50 samples = unreliable).
+4. Fix any issues found before running real experiments.
 
 ## Dream Phase (AutoDream)
 
