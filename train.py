@@ -88,6 +88,8 @@ def compute_features(d):
     feat_list.append(vol_ratio)
 
     # Stack: (L, N, F)
+    FEATURE_NAMES = ["daily_ret", "mom20", "vol20", "price_ma200", "price_ma50",
+                     "mom5", "mom60", "vol60", "hl_range", "vol_ratio"]
     features = torch.stack(feat_list, dim=-1)  # (L, N, F)
 
     # Z-score normalize: expanding window (no look-ahead bias)
@@ -101,7 +103,7 @@ def compute_features(d):
     features[20:] = (features[20:] - expanding_mean[20:]) / (expanding_std[20:] + 1e-8)
     features[:20] = 0  # not enough history, zero out
 
-    return features, ret[start:]  # features and aligned returns
+    return features, ret[start:], FEATURE_NAMES  # features, aligned returns, names
 
 
 # ══════════════════════════════════════════════
@@ -178,7 +180,7 @@ def main():
 
     # Load
     d = torch.load(DATA / "tensors.pt", weights_only=False)
-    features, returns = compute_features(d)
+    features, returns, feat_names = compute_features(d)
     T, N, F = features.shape
     print(f"Features: {T} days × {N} assets × {F} features")
 
@@ -273,6 +275,7 @@ def main():
         "lr": LR,
         "epochs": EPOCHS,
         "n_features": F,
+        "features": feat_names,
         "n_assets": N,
         "n_params": n_params,
         "train_samples": n_train,
