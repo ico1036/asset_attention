@@ -45,6 +45,13 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 - Walk-forward validation: train on past, test on unseen future. No peeking.
 - Every experiment must be reproducible (set seed).
 
+## DreamWalk (Harness Integrity Check)
+
+When `philosophy.md`, `program.md`, or `prepare.py` changes:
+1. Mentally simulate 5 experiments + 1 Dream step-by-step.
+2. At each step, ask: "Can I do this? Is something missing? Will it break?"
+3. Fix any issues found before running real experiments.
+
 ## Dream Phase (AutoDream)
 
 Every 10 experiments, pause and "dream":
