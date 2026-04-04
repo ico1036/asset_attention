@@ -96,6 +96,18 @@ from prepare import (
 - Reproducible (set seed).
 - New libraries: `uv add <package>` first.
 
+## Socratic Self-Check (before committing to any new model direction)
+
+Before implementing a new architecture or major design change, interrogate yourself:
+
+1. **인풋 데이터의 여정을 말해봐.** Raw data → model → output까지 한 단계씩 설명. 설명 못 하면 이해 못 한 거다.
+2. **피처는 뭐야?** 각 차원이 뭘 뜻하는지 명확히. "17차원"이면 왜 17인지.
+3. **데이터포인트는 몇 개야?** 자산을 독립 취급했는가? 안 했으면 왜?
+4. **시계열 학습이 되는 구조야?** 시간축이 mean/sum으로 사라지지 않았는가?
+5. **이 설계의 전제는 뭐야?** 그 전제가 philosophy.md의 미션과 일치하는가?
+
+이 질문에 명쾌하게 답할 수 없으면 코딩하지 마라. 먼저 생각하라.
+
 ## Dream Phase (every 10 experiments)
 
 1. Read all cards and `docs/experiments.md`.
