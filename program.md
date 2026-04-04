@@ -35,7 +35,8 @@ uv run prepare.py   # builds tensors from parquet, ~10s
    ```
 6. If KEEP: `git add -A && git commit -m "exp N: [description]" && git push`.
    If DISCARD: `git checkout HEAD -- train.py` to restore last KEEP version. Card stays (failures are data too).
-7. Repeat from step 1.
+7. If train.py crashes, record as FAILED in experiments.md, revert train.py, and continue.
+8. Repeat from step 1.
 
 ## Session Limits
 - Default: run up to 20 experiments per session, then stop and remove LOCK.
@@ -50,6 +51,7 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 - Device: MPS (Apple Silicon). Use `torch.device("mps")`.
 - Walk-forward validation: train on past, test on unseen future. No peeking.
 - Every experiment must be reproducible (set seed).
+- If you need a new library, run `uv add <package>` first. Update pyproject.toml before importing.
 
 ## DreamWalk (Harness Integrity Check)
 
