@@ -23,7 +23,7 @@ uv run prepare.py   # builds tensors from parquet, ~10s
 1. Read the current `train.py` and `experiments.md` (past results).
 2. Form a hypothesis. Write it as a comment at the top of `train.py`.
 3. Modify `train.py`. You may change anything: model architecture, optimizer, loss, hyperparameters.
-4. Run: `uv run train.py` — fixed 5-minute wall clock budget. This auto-saves a card to `cards/exp_NNNN.json`.
+4. Run: `uv run guard.py` (NOT train.py directly) — this runs train.py + enforces hard checks. Never bypass guard.py.
    Add model-specific details to the config dict in train.py (e.g., n_layers, d_model, n_heads, attention_order).
 5. Record result in `experiments.md` (use same exp number as the card):
    ```

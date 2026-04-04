@@ -1,0 +1,44 @@
+{
+  "exp": 56,
+  "timestamp": "2026-04-04T16:28:59.497398",
+  "config": {
+    "model": "MLPAllocator_GELU_noise",
+    "seed": 42,
+    "window": 60,
+    "rebal_freq": 5,
+    "lr": 0.003,
+    "n_features": 10,
+    "features": [
+      "daily_ret",
+      "mom20",
+      "vol20",
+      "price_ma200",
+      "price_ma50",
+      "mom5",
+      "mom60",
+      "vol60",
+      "hl_range",
+      "vol_ratio"
+    ],
+    "n_assets": 17,
+    "n_params": 692,
+    "hidden_dim": 32,
+    "dropout": 0.3,
+    "weight_decay": 0.001,
+    "activation": "GELU",
+    "noise_std": 0.1
+  },
+  "results": {
+    "val_sharpe": 1.8486,
+    "test_sharpe": 4.2263,
+    "test_mdd": -0.71,
+    "test_ann_return": 1.57,
+    "elapsed_sec": 1.1,
+    "benchmark_equal_weight_sharpe": 2.7554
+  },
+  "verdict": "DISCARD",
+  "issues": [
+    "\u26a0\ufe0f FAST: 1s < 30s minimum. Model undertrained or data too small.",
+    "\u26a0\ufe0f GAP: |val-test| = 2.38 > 1.5. Likely overfitting."
+  ]
+}
