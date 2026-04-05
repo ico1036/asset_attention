@@ -256,6 +256,9 @@ After multi-seed failure, tested 5 genuinely new approaches:
 
 **Results**: ALL failed. Max_shift < 0.3% across all experiments.
 
+### Critical Finding: Models Converge to 95% SHY
+All experiments show portfolio weights converging to ~95% SHY (cash) with crisis/calm differences of 0.0002%-0.25%. The models are not learning regime-dependent allocation — they're learning static risk-averse positions.
+
 ### Updated Belief
 | Hypothesis | Prior | Updated | Evidence |
 |------------|-------|---------|----------|
@@ -263,17 +266,19 @@ After multi-seed failure, tested 5 genuinely new approaches:
 | **H2: Attention wrong approach** | **60%** | **95%** | Multi-seed + 15 architectures prove method failure |
 | H3: Hyperparameter sensitivity | 30% | — | Disproven — signals were artifacts |
 
-### Decision Point
-After **56+ experiments** with ~15 distinct attention architectures:
+### Critic Review r7_06 Verdict: FAIL — Mission at Critical Risk
+After **56 experiments** with ~15 distinct attention architectures:
 - **ZERO robust regime detection**
 - ALL "signals" were seed artifacts or noise
+- Models collapse to static cash-holding positions
 - Hard Sharpe ceiling of 0.6-0.9 vs EW's 1.39
 
-**Mission status**: CRITICAL RISK
+**Mission status**: CRITICAL RISK — Recommendation: Terminate or pivot. Do not continue current approach.
 
 **Options**:
 1. **Mission termination** — Accept that implicit regime learning doesn't work at this scale
-2. **Mission pivot** — Try daily rebalancing (3x samples) or explicit regime labels
-3. **Last-resort architectures** — Try state-space hybrids or completely different approaches
+2. **Mission pivot** — Try daily rebalancing (3x samples) 
+3. **Mission pivot** — Use explicit regime labels instead of implicit learning
+4. **Mission pivot** — Try state-space models (S4, Mamba) instead of attention
 
-**Recommendation**: Critic review for mission termination assessment.
+**Required**: Human decision on mission direction before any further experiments.
