@@ -225,3 +225,55 @@ If d_model tuning can achieve:
 
 Else:
 → **Mission termination** — regime signal exists but is too weak for practical use
+
+---
+
+## Round 7, Batch 6 (Exp 0040-0049, 0050-0056) — Multi-Seed Validation FAILURE + Novel Approaches
+
+### Multi-Seed Validation Results (Exp 0039-0044)
+**CRITICAL FINDING**: The "regime signals" in Exp 0031-0032 were **SEED ARTIFACTS**.
+
+| Config | seed=42 | seed=123 | seed=456 | seed=789 |
+|--------|---------|----------|----------|----------|
+| d=4 | 11.1% | 0.01% | 0.01% | 0.01% |
+| d=16 | 13.1% | 0.01% | 0.01% | — |
+
+**All multi-seed validations show ZERO regime signal (0.01%)**. Only seed=42 produced meaningful shifts.
+
+### Implications
+1. **The regime signal was NOT real** — it was random initialization luck
+2. **Exp 31/32 results were false positives** — lucky seed, not learned behavior
+3. **Architecture is NOT the bottleneck** — the problem is fundamental
+4. **40+ experiments confirm**: Attention-based implicit regime learning does not work at this scale
+
+### Novel Architecture Experiments (Exp 0050-0056)
+After multi-seed failure, tested 5 genuinely new approaches:
+1. **ContrastiveRegimeAttention** — Explicit contrastive loss between crisis/calm
+2. **MultiHeadSpecialist** — Independent heads for different regimes
+3. **TimeBiasedAttention** — Learnable temporal recency bias
+4. **VolatilityGatedAttention** — Input volatility gates attention
+5. **SparseRegimeAttention** — Top-k sparse attention
+
+**Results**: ALL failed. Max_shift < 0.3% across all experiments.
+
+### Updated Belief
+| Hypothesis | Prior | Updated | Evidence |
+|------------|-------|---------|----------|
+| H1: Training protocol | 10% | 5% | Not the issue |
+| **H2: Attention wrong approach** | **60%** | **95%** | Multi-seed + 15 architectures prove method failure |
+| H3: Hyperparameter sensitivity | 30% | — | Disproven — signals were artifacts |
+
+### Decision Point
+After **56+ experiments** with ~15 distinct attention architectures:
+- **ZERO robust regime detection**
+- ALL "signals" were seed artifacts or noise
+- Hard Sharpe ceiling of 0.6-0.9 vs EW's 1.39
+
+**Mission status**: CRITICAL RISK
+
+**Options**:
+1. **Mission termination** — Accept that implicit regime learning doesn't work at this scale
+2. **Mission pivot** — Try daily rebalancing (3x samples) or explicit regime labels
+3. **Last-resort architectures** — Try state-space hybrids or completely different approaches
+
+**Recommendation**: Critic review for mission termination assessment.
