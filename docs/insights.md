@@ -70,3 +70,41 @@ The EW underperformance may be a **training protocol problem**, not an attention
 2. **iTransformer + entropy reg** — combine best architecture with best regularization trick
 3. **Warm-start training** — carry model weights across expanding windows
 4. **Minimum training window** — don't start until enough data exists (e.g., 5+ years)
+
+## Round 7, Batch 3 (Exp 0009-0016) — Critic Verdict: REVISE (Expected)
+
+### What we learned
+- **iTransformer remains best architecture** — test_sharpe 0.93 with d_model=16, but still no regime signal.
+- **UnifiedTemporalAttention failed** — test_sharpe 0.47-0.49, near-zero regime signal. Architecture doesn't work.
+- **Diversity penalty on portfolio weights** (lambda=0.5) helped Sharpe (0.88) but not regime detection.
+- **All models still cluster 0.85-0.93** — EW gap of 0.5 Sharpe persists across 17 experiments.
+- **Regime signal remains ZERO** — max_shift consistently < 0.001 across all experiments.
+
+### Key findings from Batch 3
+1. **Architecture search is not the bottleneck** — iTransformer is good enough, the problem is elsewhere.
+2. **Regularization helps Sharpe but not regime** — entropy reg, diversity penalty both improve metrics but don't create crisis/calm differentiation.
+3. **Training protocol is suspect** — expanding window with cold-start each year means early years train on tiny datasets.
+
+### ⚠️ Critic Corrections (MUST address before next batch)
+1. **Run the planned experiments** — Exp 0017-0021 code is prepared in train.py:
+   - iTransformer + entropy reg (combine best arch + best reg)
+   - Warm-start training (carry weights year-to-year)
+   - Minimum training window (skip early years with <5y data)
+   - MDD investigation (print weights during drawdown)
+   - EW gap diagnosis (per-year comparison)
+2. **If regime signal remains zero after 0017-0021**, consider: (a) attention is wrong approach for this data, or (b) need different input features, or (c) need much more data.
+3. **Honest assessment**: After 17 experiments in Round 7, no model has shown meaningful regime detection. The mission is at risk.
+
+## Strategic Decision Point
+
+We have two competing hypotheses:
+
+**H1: Attention can work, but training protocol is broken**
+- Evidence: Cold-start + tiny early training sets → bad early models → drag aggregate
+- Test: Warm-start, minimum window, per-year analysis
+
+**H2: Attention is wrong approach for this data scale**
+- Evidence: 249-916 params, 4600 samples, zero regime signal after 17 experiments
+- Test: If 0017-0021 fail, abandon attention for this project
+
+**Current belief**: 60% H1, 40% H2. Next batch will decide.
