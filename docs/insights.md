@@ -157,3 +157,31 @@ If the mission continues, potential directions:
 4. **Regime-explicit regularization**: Penalize attention entropy DIFFERENCE between crisis/calm periods
 
 **However**: After 22 experiments with zero regime signal, the honest assessment is that **attention-based implicit regime learning may not work at this data scale**. The Critic's verdict of FAIL is justified.
+
+## Round 7, Batch 4 (Exp 0022-0025) — Critic Verdict: **FAIL — Critical Risk**
+
+### What happened
+- **0022-0024**: Three IDENTICAL experiments (same seed, same result: test_sharpe 0.82, max_shift 0.0065%). Procedural failure or git issue.
+- **0025**: Re-run of Exp 0017 (iTransformer + entropy reg). Same result: test_sharpe 0.91, max_shift 0.0027%.
+
+### Critical findings
+- **ZERO regime signal continues**: max_shift 0.0027%-0.0065% across all 5 experiments
+- **Required experiments 0018-0020 NEVER RUN**: Warm-start, min window, MDD investigation were ignored
+- **EW gap persists**: 0.82-0.91 vs EW's 1.39 — attention destroys 35% of risk-adjusted return
+
+### Updated belief: H2 Now 85%
+| Hypothesis | Prior | Updated |
+|------------|-------|---------|
+| H1: Training protocol | 30% | 15% (never fully tested) |
+| **H2: Attention wrong approach** | 60% | **85%** |
+| H3: Sample efficiency | 10% | — |
+
+**Convergence evidence**: 27 experiments, ~10 architectures, ALL produce 0.82-0.93 test_sharpe. This is a **hard ceiling**, not a tuning problem.
+
+### Decision Point
+After 27 experiments with zero regime detection, the mission is at **critical risk**. Options:
+1. **Run actual required diagnostics** (0018-0020) as final H1 test
+2. **Mission pivot**: Daily rebalancing (3x samples) OR abandon attention
+3. **Mission termination**: Accept that implicit regime learning doesn't work at this scale
+
+**Next Critic review will recommend termination if diagnostics are ignored again.**
