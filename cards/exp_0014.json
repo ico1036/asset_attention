@@ -1,0 +1,174 @@
+{
+  "exp": 14,
+  "timestamp": "2026-04-05T04:36:39.276043",
+  "config": {
+    "model": "UnifiedTemporalAttention",
+    "n_params": 916,
+    "n_assets": 4,
+    "tickers": [
+      "SPY",
+      "TLT",
+      "GLD",
+      "SHY"
+    ],
+    "d_model": 16,
+    "n_heads": 2,
+    "n_patches": 12,
+    "temperature": 0.1,
+    "entropy_lambda": 0.05,
+    "min_train_samples": 1250,
+    "architecture": "Unified temporal attention: each patch = all assets, self-attention over time",
+    "has_attention": true,
+    "preserves_time": true,
+    "regime_signal": {
+      "avg_entropy": 0.004005500581115484,
+      "crisis_weights": [
+        0.04887565225362778,
+        0.00024981770548038185,
+        0.0032585265580564737,
+        0.9476160407066345
+      ],
+      "calm_weights": [
+        0.0489681251347065,
+        0.00025073904544115067,
+        0.003267667256295681,
+        0.9475134611129761
+      ],
+      "max_shift": 0.00010257959365844727,
+      "crisis_entropy": 0.004010498058050871,
+      "calm_entropy": 0.004000101238489151,
+      "diff": 1.0396819561719894e-05
+    }
+  },
+  "results": {
+    "val_sharpe": 1.4184757438047908,
+    "test_sharpe": 0.470958698817232,
+    "ann_return_pct": 2.3276146966964006,
+    "ann_vol_pct": 4.942290486494853,
+    "max_drawdown_pct": -28.43647003173828,
+    "turnover": 0.0029697397258132696,
+    "yearly": {
+      "2014": {
+        "val_sharpe": -0.8332355092210502,
+        "test_sharpe": 1.847216642745428,
+        "n_test": 252,
+        "train_size": 1401,
+        "ew_sharpe": 1.7950654978599405,
+        "delta_sharpe": 0.052151144885487444
+      },
+      "2015": {
+        "val_sharpe": 1.8512558732886166,
+        "test_sharpe": -0.28011073979985696,
+        "n_test": 252,
+        "train_size": 1628,
+        "ew_sharpe": -0.462242900540611,
+        "delta_sharpe": 0.18213216074075406
+      },
+      "2016": {
+        "val_sharpe": 0.2330749730711573,
+        "test_sharpe": 1.2805731607651034,
+        "n_test": 252,
+        "train_size": 1854,
+        "ew_sharpe": 0.8930498285445947,
+        "delta_sharpe": 0.3875233322205087
+      },
+      "2017": {
+        "val_sharpe": 0.5668891111061595,
+        "test_sharpe": 2.329436765335175,
+        "n_test": 251,
+        "train_size": 2081,
+        "ew_sharpe": 2.4047747155180654,
+        "delta_sharpe": -0.07533795018289036
+      },
+      "2018": {
+        "val_sharpe": 2.546040592376178,
+        "test_sharpe": -0.3577815075715988,
+        "n_test": 251,
+        "train_size": 2307,
+        "ew_sharpe": -0.34054514638721683,
+        "delta_sharpe": -0.017236361184381987
+      },
+      "2019": {
+        "val_sharpe": 1.402892481669612,
+        "test_sharpe": 4.060543621181012,
+        "n_test": 252,
+        "train_size": 2533,
+        "ew_sharpe": 2.9633127917335185,
+        "delta_sharpe": 1.097230829447494
+      },
+      "2020": {
+        "val_sharpe": 4.162425015426503,
+        "test_sharpe": 2.4385030177487947,
+        "n_test": 253,
+        "train_size": 2760,
+        "ew_sharpe": 1.4320276332485014,
+        "delta_sharpe": 1.0064753845002934
+      },
+      "2021": {
+        "val_sharpe": 2.5615966103971184,
+        "test_sharpe": 0.4637246836589866,
+        "n_test": 252,
+        "train_size": 2988,
+        "ew_sharpe": 0.6097791109450794,
+        "delta_sharpe": -0.1460544272860928
+      },
+      "2022": {
+        "val_sharpe": 0.46564003926535724,
+        "test_sharpe": -1.7694481670416322,
+        "n_test": 251,
+        "train_size": 3214,
+        "ew_sharpe": -1.4695581741063348,
+        "delta_sharpe": -0.2998899929352974
+      },
+      "2023": {
+        "val_sharpe": -0.8096177454586664,
+        "test_sharpe": 1.2640118851135849,
+        "n_test": 250,
+        "train_size": 3440,
+        "ew_sharpe": 1.2981207406707693,
+        "delta_sharpe": -0.03410885555718446
+      },
+      "2024": {
+        "val_sharpe": 0.794456527820851,
+        "test_sharpe": 2.5537604123577657,
+        "n_test": 252,
+        "train_size": 3665,
+        "ew_sharpe": 1.4099788056410396,
+        "delta_sharpe": 1.1437816067167261
+      },
+      "2025": {
+        "val_sharpe": 2.2075314005867432,
+        "test_sharpe": 3.6841085041018147,
+        "n_test": 250,
+        "train_size": 3892,
+        "ew_sharpe": 2.35945848674957,
+        "delta_sharpe": 1.3246500173522446
+      },
+      "2026": {
+        "val_sharpe": 3.291235299133701,
+        "test_sharpe": 0.251323036472888,
+        "n_test": 62,
+        "train_size": 4117,
+        "ew_sharpe": 0.5275527383635673,
+        "delta_sharpe": -0.2762297018906793
+      }
+    },
+    "elapsed_sec": 237.5,
+    "loss_curve": {
+      "train": [],
+      "val": []
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.3,
+      1.2
+    ],
+    "train_time": [
+      30,
+      300
+    ]
+  },
+  "verdict": "KEEP",
+  "issues": []
+}
