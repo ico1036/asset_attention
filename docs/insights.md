@@ -282,3 +282,58 @@ After **56 experiments** with ~15 distinct attention architectures:
 4. **Mission pivot** — Try state-space models (S4, Mamba) instead of attention
 
 **Required**: Human decision on mission direction before any further experiments.
+
+---
+
+## Round 7, Batch 7 (Exp 0050-0056) — Critic Verdict: **FAIL — Mission Termination Recommended**
+
+### What was tested
+After multi-seed validation proved Exp 0031-0032 regime signals were seed artifacts (r7_05, r7_06), 5 genuinely novel attention architectures were tested:
+
+| Exp | Model | Hypothesis | test_sharpe | max_shift |
+|-----|-------|------------|-------------|-----------|
+| 0050 | ContrastiveRegimeAttention | Explicit contrastive loss crisis/calm | 0.779 | **0.0002%** |
+| 0053 | MultiHeadSpecialist | Independent heads learn different regimes | 0.664 | **0.25%** |
+| 0056 | TimeBiasedAttention | Learnable temporal recency bias | 0.735 | **0.002%** |
+
+### Critical Findings
+
+1. **Models converge to ~95% SHY across ALL experiments** — Static risk-averse positions, not regime adaptation
+2. **Crisis-calm weight shifts: 0.0002%—0.25%** — Economically meaningless, indistinguishable from numerical noise
+3. **15+ architectures, 56+ experiments, ZERO robust regime detection** — The approach has failed
+
+### The Core Problem: Wrong Tool for the Job
+
+Attention excels at "attend to relevant tokens." It does NOT inherently learn "recognize global context and change strategy." The experiments prove this mismatch:
+- Attention weights vary (entropy 0.3—2.4)
+- Portfolio weights stay static (~95% SHY)
+- The attention signal does not flow through to allocation decisions
+
+**The architecture attends. It does not adapt.**
+
+### Multi-Seed Validation Confirms Failure
+
+| Config | seed=42 | seed=123 | seed=456 | seed=789 |
+|--------|---------|----------|----------|----------|
+| d=4 | 11.1% shift | 0.01% | 0.01% | 0.01% |
+| d=16 | 13.1% shift | 0.01% | 0.01% | — |
+
+**Results that don't replicate across seeds are not real results.**
+
+### Updated Belief
+
+| Hypothesis | Prior | Current | Evidence |
+|------------|-------|---------|----------|
+| H1: Training protocol | 5% | 2% | Not the bottleneck |
+| **H2: Attention wrong approach** | **95%** | **98%** | 56+ experiments, 15+ architectures, definitive failure |
+
+### Decision Required
+
+**The Explorer MUST NOT run more attention experiments.** Options:
+
+1. **Mission Termination (RECOMMENDED)** — Document the negative result. Scientific value: attention-based implicit regime learning does not work at this scale.
+2. **Pivot to daily rebalancing** — 3× samples (~14,000). Unlikely to fix fundamental mismatch.
+3. **Pivot to explicit regimes** — Use VIX/macros as categorical inputs.
+4. **Pivot to different architecture** — S4, Mamba, or structured latent variable models.
+
+**Mission status**: AWAITING HUMAN DECISION — 주인님 input required before any further experiments.
