@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
-Exp 0018: Warm-Start Training
-Hypothesis: Carrying model weights across expanding windows helps early years.
-Change: Initialize each year's model from prior year's trained weights.
-Note: Using 100 epochs for faster completion.
+Exp 0020: MDD Investigation
+Hypothesis: Understanding WHEN the model fails helps fix it.
+Change: Print detailed diagnostics during max drawdown periods.
 """
 
 import time, math, torch, torch.nn as nn
@@ -12,6 +11,7 @@ from prepare import (
     evaluate_and_print, write_card, sharpe,
     N_ASSETS, MAX_PARAMS, N_PATCHES,
 )
+import numpy as np
 
 
 class iTransformer(nn.Module):
@@ -92,7 +92,7 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patien
                     break
     if best_state is not None:
         model.load_state_dict(best_state)
-    return best_val, best_state
+    return best_val
 
 
 def analyze_attention(model, X, dates, indices):
@@ -122,31 +122,40 @@ def analyze_attention(model, X, dates, indices):
     return regime
 
 
+def find_max_drawdown_period(returns, dates, window=30):
+    """Find the period with worst rolling drawdown."""
+    cumret = np.cumprod(1 + returns) - 1
+    running_max = np.maximum.accumulate(cumret)
+    drawdown = cumret - running_max
+    min_idx = np.argmin(drawdown)
+    start_idx = max(0, min_idx - window)
+    end_idx = min(len(returns), min_idx + window)
+    return start_idx, min_idx, end_idx, drawdown[min_idx]
+
+
 def main():
     t0 = time.time()
     torch.manual_seed(42)
     d = load_data()
     ret = d["log_return"]
     dates = d["dates"]
+    tickers = d["tickers"]
     T, N = ret.shape
     print(f"Data: {T} days × {N} assets")
     X, Y, indices = make_sliding_windows(ret)
     splits = make_expanding_splits(dates, indices)
     model = iTransformer(n_assets=N, d_model=8, n_patches=N_PATCHES)
     n_params = model.count_params()
-    print(f"Model: iTransformerWarmStart, {n_params} params")
+    print(f"Model: iTransformerMDDInvestigation, {n_params} params")
     assert n_params <= MAX_PARAMS
     
-    all_test_weights, all_test_Y = [], []
+    all_test_weights, all_test_Y, all_test_dates = [], [], []
     yearly_results = {}
-    prev_state = None
     
     for split in splits:
         torch.manual_seed(42)
         model = iTransformer(n_assets=N, d_model=8, n_patches=N_PATCHES)
-        if prev_state is not None:
-            model.load_state_dict(prev_state)
-        val_s, best_state = train_one_split(model, X, Y, split["train"], split["val"])
+        val_s = train_one_split(model, X, Y, split["train"], split["val"])
         model.eval()
         with torch.no_grad():
             test_idx = split["test"]
@@ -158,22 +167,41 @@ def main():
         print(f"  {year}: val={val_s:.3f}, test={ts:.3f}")
         all_test_weights.append(w_test)
         all_test_Y.append(Y[test_idx])
-        prev_state = best_state
+        all_test_dates.extend([dates[indices[i]] for i in test_idx])
     
     all_w = torch.cat(all_test_weights, dim=0)
     all_y = torch.cat(all_test_Y, dim=0)
+    all_rets = (all_w * all_y).sum(dim=-1).numpy()
+    
+    # MDD Investigation
+    start_idx, min_idx, end_idx, max_dd = find_max_drawdown_period(all_rets, all_test_dates)
+    print(f"\n=== MDD Investigation ===")
+    print(f"Max Drawdown: {max_dd:.2%} at index {min_idx}")
+    print(f"Period: {all_test_dates[start_idx]} to {all_test_dates[end_idx]}")
+    print(f"\nPortfolio weights during drawdown period:")
+    for i in range(start_idx, min_idx + 1, 5):  # Sample every 5 days
+        w = all_w[i].tolist()
+        print(f"  {all_test_dates[i]}: SPY={w[0]:.1%}, TLT={w[1]:.1%}, GLD={w[2]:.1%}, SHY={w[3]:.1%}")
+    
+    print(f"\nAsset returns during drawdown period:")
+    for t, ticker in enumerate(tickers):
+        asset_rets = all_y[start_idx:end_idx, t].numpy()
+        cum_ret = np.prod(1 + asset_rets) - 1
+        print(f"  {ticker}: {cum_ret:.2%} cumulative")
+    
     results = evaluate_and_print(all_w, all_y, "OOS_all", benchmark_n=N)
     regime = analyze_attention(model, X, dates, indices)
     elapsed = time.time() - t0
     print(f"\nTotal time: {elapsed:.1f}s")
     
     config = {
-        "model": "iTransformerWarmStart",
-        "n_params": n_params, "n_assets": N, "tickers": d["tickers"],
+        "model": "iTransformerMDDInvestigation",
+        "n_params": n_params, "n_assets": N, "tickers": tickers,
         "d_model": 8, "n_patches": N_PATCHES, "temperature": 0.1,
-        "architecture": "iTransformer with warm-start training (carry weights year-to-year)",
+        "architecture": "iTransformer with MDD diagnostics",
         "has_attention": True, "preserves_time": True,
         "regime_signal": regime,
+        "mdd_period": {"start": all_test_dates[start_idx], "end": all_test_dates[end_idx], "depth": float(max_dd)},
     }
     card_results = {
         "val_sharpe": sum(r["val_sharpe"] for r in yearly_results.values()) / len(yearly_results),
@@ -186,7 +214,7 @@ def main():
         "elapsed_sec": round(elapsed, 1),
         "loss_curve": {"train": [], "val": []},
     }
-    write_card(config, card_results, {"val_sharpe": [0.3, 1.5], "train_time": [20, 200]})
+    write_card(config, card_results, {"val_sharpe": [0.3, 1.5], "train_time": [30, 300]})
 
 
 if __name__ == "__main__":
