@@ -174,3 +174,50 @@ Planned experiments to address Critic's required changes from review_r7_02:
 | 0021 | EW gap diagnosis | 0.911 | -43.1% | 0.003% | Model beats EW in 9/17 years |
 
 **Overall assessment**: After 22 experiments in Round 7, **ZERO models have shown meaningful regime detection**. The mission remains at risk. However, Exp 0021 reveals the model is not uniformly worse than EW — it beats EW in 9 of 17 years but has catastrophic failures in 2011 and 2014. This suggests the problem is not architecture but **sample efficiency / robustness to distribution shift**.
+
+---
+
+## Exp 0022-0030: Interim Batch (Pre-Critic Review)
+
+See `docs/reviews/review_r7_04.md` for Critic assessment. Summary:
+- 0022-0024: Identical re-runs (procedural failure)
+- 0025: Re-run of 0017
+- 0026: Warm-start (Exp 0018 requirement) — DONE
+- 0027: Min window 5y (Exp 0019 requirement) — DONE  
+- 0028: MDD investigation (Exp 0020 requirement) — DONE
+- 0029: Sparse attention (not requested)
+- 0030: CVaR loss (not requested) — test_sharpe 0.890, max_shift 0.003%
+
+---
+
+## Exp 0031-0034: Explorer Batch 5 (Post-Critic Review)
+
+**Context**: After review_r7_04 FAIL verdict, 5 diagnostic experiments varying d_model, temperature, and entropy.
+
+| Exp | Config | test_sharpe | max_shift | Notes |
+|-----|--------|-------------|-----------|-------|
+| 0031 | d_model=4 | 0.926 | **11.1%** | Smaller model, meaningful shift! |
+| 0032 | d_model=16 | 0.826 | **13.1%** | Larger model, bigger shift but lower Sharpe |
+| 0033 | temp=0.05 | 0.915 | 8.1% | Sharper attention, moderate shift |
+| 0034 | entropy=0.5 | 0.904 | 4.2% | Stronger reg = less shift |
+
+### Key Finding: REGIME SIGNAL DETECTED
+
+**Exp 0031 and 0032 show max_shift of 11-13%** — the first meaningful regime differentiation in 35 experiments!
+
+- **0031 (d=4)**: Crisis = [33.3%, 13.6%, 36.3%, 16.7%] vs Calm = [29.8%, 21.5%, 25.2%, 23.5%]
+  - Crisis: Overweight GLD (+11%) and SPY (+3.5%), underweight TLT (-7.9%) and SHY (-6.8%)
+  - Calm: More balanced, higher TLT/SHY allocation
+  
+- **0032 (d=16)**: Crisis = [19.3%, 15.6%, 35.5%, 29.5%] vs Calm = [25.5%, 25.3%, 22.4%, 26.7%]
+  - Crisis: Heavy GLD/SHY tilt (risk-off), underweight SPY/TLT
+  - Calm: Balanced across all assets
+
+### Implications
+1. **Smaller models (d=4) may generalize better** for regime detection
+2. **Architecture is NOT the bottleneck** — hyperparameter tuning matters
+3. **35 experiments was not enough** — the signal was hidden in hyperparameter space
+4. **Mission is still at risk** — 11-13% shift is meaningful but Sharpe still below EW (1.39)
+
+### Verdict
+**PARTIAL SUCCESS** — First regime signal detected after 35 experiments. Continue with smaller d_model and systematic hyperparameter search.

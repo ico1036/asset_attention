@@ -1,0 +1,161 @@
+{
+  "exp": 26,
+  "timestamp": "2026-04-05T16:01:05.018781",
+  "config": {
+    "model": "iTransformerWarmStart",
+    "n_params": 249,
+    "n_assets": 4,
+    "tickers": [
+      "SPY",
+      "TLT",
+      "GLD",
+      "SHY"
+    ],
+    "d_model": 8,
+    "n_patches": 12,
+    "temperature": 0.1,
+    "entropy_lambda": 0.1,
+    "warm_start": true,
+    "architecture": "iTransformer with warm-start year-to-year",
+    "has_attention": true,
+    "preserves_time": true,
+    "regime_signal": {
+      "avg_entropy": 1.8570845838894456e-07,
+      "crisis_weights": [
+        0.047493334859609604,
+        0.00043607657426036894,
+        6.715417839586735e-05,
+        0.9520034193992615
+      ],
+      "calm_weights": [
+        0.0474931038916111,
+        0.0004360768652986735,
+        6.715438939863816e-05,
+        0.9520035982131958
+      ],
+      "max_shift": 2.3096799850463867e-07,
+      "crisis_entropy": 1.8569969029158528e-07,
+      "calm_entropy": 1.856937217326049e-07,
+      "diff": 5.9685589803848416e-12,
+      "yearly_weight_std": [
+        0.09950979799032211,
+        0.11735980212688446,
+        0.1530657708644867,
+        0.35128700733184814
+      ],
+      "avg_yearly_std": 0.1803056001663208
+    }
+  },
+  "results": {
+    "val_sharpe": 1.2511241881939097,
+    "test_sharpe": 0.6615011316751304,
+    "ann_return_pct": 3.1307098281104118,
+    "ann_vol_pct": 4.732735407696829,
+    "max_drawdown_pct": -17.6843523979187,
+    "turnover": 0.0005773158045485616,
+    "yearly": {
+      "2010": {
+        "val_sharpe": 0.4282247352023391,
+        "test_sharpe": 1.8336077365342704,
+        "n_test": 252
+      },
+      "2011": {
+        "val_sharpe": 2.214576424555578,
+        "test_sharpe": 1.1778900729602517,
+        "n_test": 252
+      },
+      "2012": {
+        "val_sharpe": 0.44514395768128107,
+        "test_sharpe": 1.0028352176807422,
+        "n_test": 250
+      },
+      "2013": {
+        "val_sharpe": 1.2297092043229854,
+        "test_sharpe": -0.8964273697043308,
+        "n_test": 252
+      },
+      "2014": {
+        "val_sharpe": -0.8133878490835604,
+        "test_sharpe": 1.2118446727395147,
+        "n_test": 252
+      },
+      "2015": {
+        "val_sharpe": 1.9797734117077423,
+        "test_sharpe": -0.3071936946362155,
+        "n_test": 252
+      },
+      "2016": {
+        "val_sharpe": -0.23686731831083915,
+        "test_sharpe": 0.796195444029832,
+        "n_test": 252
+      },
+      "2017": {
+        "val_sharpe": 0.7348011490259058,
+        "test_sharpe": 1.425282291467556,
+        "n_test": 251
+      },
+      "2018": {
+        "val_sharpe": 1.6011811622127214,
+        "test_sharpe": 1.2166200816691997,
+        "n_test": 251
+      },
+      "2019": {
+        "val_sharpe": 1.3826134612190615,
+        "test_sharpe": 4.044563405042155,
+        "n_test": 252
+      },
+      "2020": {
+        "val_sharpe": 4.145669115807094,
+        "test_sharpe": 2.4281135112624,
+        "n_test": 253
+      },
+      "2021": {
+        "val_sharpe": 2.558978735189893,
+        "test_sharpe": 0.4233235274049361,
+        "n_test": 252
+      },
+      "2022": {
+        "val_sharpe": 0.7193424793954137,
+        "test_sharpe": -1.7278076552491002,
+        "n_test": 251
+      },
+      "2023": {
+        "val_sharpe": -1.3678398124769067,
+        "test_sharpe": 1.8225827646217976,
+        "n_test": 250
+      },
+      "2024": {
+        "val_sharpe": 0.7979205517689605,
+        "test_sharpe": 2.547694617767436,
+        "n_test": 252
+      },
+      "2025": {
+        "val_sharpe": 2.2020885468638753,
+        "test_sharpe": 3.560885241478983,
+        "n_test": 250
+      },
+      "2026": {
+        "val_sharpe": 3.2471832442149187,
+        "test_sharpe": 0.1894922898223383,
+        "n_test": 62
+      }
+    },
+    "elapsed_sec": 94.7,
+    "loss_curve": {
+      "train": [],
+      "val": []
+    }
+  },
+  "expected": {
+    "val_sharpe": [
+      0.3,
+      1.5
+    ],
+    "train_time": [
+      30,
+      300
+    ]
+  },
+  "verdict": "DISCARD",
+  "issues": []
+}

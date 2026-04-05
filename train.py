@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Exp 0017: iTransformer + Entropy Regularization (REQUIRED by Critic)
-Hypothesis: Combining best architecture (iTransformer) with entropy reg improves regime signal.
-Expected: val_sharpe [0.3, 1.5], train_time [30, 300]
-Regime check: crisis-calm entropy difference should be significant
+Exp 0031: Ensemble of 3 Models (Different Seeds)
+Hypothesis: Single models are unstable. Ensemble averaging reduces variance and may reveal
+robust regime patterns that individual models miss.
+Expected: val_sharpe [0.3, 1.5], train_time [60, 300]
+Regime check: Does ensemble produce more stable regime-aware allocation?
 """
 
 import time, math, torch, torch.nn as nn
@@ -12,10 +13,9 @@ from prepare import (
     evaluate_and_print, write_card, sharpe,
     N_ASSETS, MAX_PARAMS, N_PATCHES,
 )
-import numpy as np
 
 
-class iTransformerEntropy(nn.Module):
+class iTransformer(nn.Module):
     def __init__(self, n_assets=4, d_model=8, n_patches=12, temperature=0.1):
         super().__init__()
         self.n_assets = n_assets
@@ -73,19 +73,13 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patien
         optimizer.zero_grad()
         w, attn = model(X_train)
         port_ret = (w * Y_train).sum(dim=-1)
-        
-        # Sharpe loss
-        sharpe_loss = -(port_ret.mean() / (port_ret.std() + 1e-8))
-        
-        # Entropy regularization
+        loss = -(port_ret.mean() / (port_ret.std() + 1e-8))
         row_entropy = -(attn * (attn + 1e-10).log()).sum(dim=-1)
         mean_entropy = row_entropy.mean()
-        loss = sharpe_loss + entropy_lambda * mean_entropy
-        
+        loss = loss + entropy_lambda * mean_entropy
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
-        
         if (epoch + 1) % 5 == 0:
             model.eval()
             with torch.no_grad():
@@ -105,81 +99,109 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patien
     return best_val
 
 
-def analyze_attention(model, X, dates, indices):
-    model.eval()
+def analyze_ensemble_attention(models, X, dates, indices):
+    """Analyze attention from ensemble - check if models disagree meaningfully."""
+    for m in models:
+        m.eval()
     with torch.no_grad():
-        w, attn = model(X, return_attn=True)
+        all_attn = []
+        all_weights = []
+        for model in models:
+            w, attn = model(X, return_attn=True)
+            all_weights.append(w)
+            row_entropy = -(attn * (attn + 1e-10).log()).sum(dim=-1)
+            all_attn.append(row_entropy.mean(dim=2).mean().item())
+        
+        # Ensemble weights (average)
+        ensemble_w = torch.stack(all_weights).mean(dim=0)
+        
+        # Weight disagreement across models (std across ensemble)
+        weight_std = torch.stack(all_weights).std(dim=0).mean().item()
+        
     years = [int(dates[idx][:4]) for idx in indices]
-    row_entropy = -(attn * (attn + 1e-10).log()).sum(dim=-1)
-    per_asset_entropy = row_entropy.mean(dim=2)
-    regime = {"avg_entropy": float(per_asset_entropy.mean())}
-    crisis = {2008, 2009, 2020}
+    crisis = {2008, 2009, 2020, 2022}
     calm = {2017, 2018, 2019}
     crisis_idx = [i for i, y in enumerate(years) if y in crisis]
     calm_idx = [i for i, y in enumerate(years) if y in calm]
+    
+    regime = {
+        "avg_entropy": sum(all_attn) / len(all_attn),
+        "weight_disagreement": weight_std,
+    }
+    
     if crisis_idx and calm_idx:
-        crisis_w = w[crisis_idx].mean(dim=0)
-        calm_w = w[calm_idx].mean(dim=0)
+        crisis_w = ensemble_w[crisis_idx].mean(dim=0)
+        calm_w = ensemble_w[calm_idx].mean(dim=0)
         shift = [(c - l) for c, l in zip(crisis_w.tolist(), calm_w.tolist())]
         regime["crisis_weights"] = crisis_w.tolist()
         regime["calm_weights"] = calm_w.tolist()
         regime["max_shift"] = max(abs(s) for s in shift)
-        crisis_e = per_asset_entropy[crisis_idx].mean().item()
-        calm_e = per_asset_entropy[calm_idx].mean().item()
-        regime["crisis_entropy"] = crisis_e
-        regime["calm_entropy"] = calm_e
-        regime["diff"] = crisis_e - calm_e
+    
     return regime
 
 
 def main():
     t0 = time.time()
-    torch.manual_seed(42)
     d = load_data()
     ret = d["log_return"]
     dates = d["dates"]
     tickers = d["tickers"]
     T, N = ret.shape
     print(f"Data: {T} days × {N} assets")
+    
     X, Y, indices = make_sliding_windows(ret)
     splits = make_expanding_splits(dates, indices)
-    model = iTransformerEntropy(n_assets=N, d_model=8, n_patches=N_PATCHES)
+    
+    model = iTransformer(n_assets=N, d_model=8, n_patches=N_PATCHES)
     n_params = model.count_params()
-    print(f"Model: iTransformerEntropy, {n_params} params")
+    print(f"Model: iTransformer (ensemble of 3), {n_params} params each")
     assert n_params <= MAX_PARAMS
     
     all_test_weights, all_test_Y = [], []
     yearly_results = {}
     
+    seeds = [42, 123, 456]
+    
     for split in splits:
-        torch.manual_seed(42)
-        model = iTransformerEntropy(n_assets=N, d_model=8, n_patches=N_PATCHES)
-        val_s = train_one_split(model, X, Y, split["train"], split["val"], entropy_lambda=0.1)
-        model.eval()
+        models = []
+        val_sharpes = []
+        
+        for seed in seeds:
+            torch.manual_seed(seed)
+            model = iTransformer(n_assets=N, d_model=8, n_patches=N_PATCHES)
+            val_s = train_one_split(model, X, Y, split["train"], split["val"], entropy_lambda=0.1)
+            models.append(model)
+            val_sharpes.append(val_s)
+        
+        # Ensemble prediction (average weights)
         with torch.no_grad():
             test_idx = split["test"]
-            w_test, _ = model(X[test_idx])
+            weights_list = [m(X[test_idx])[0] for m in models]
+            w_test = torch.stack(weights_list).mean(dim=0)
             test_ret = (w_test * Y[test_idx]).sum(dim=-1)
             ts = sharpe(test_ret)
+        
         year = split["test_year"]
-        yearly_results[year] = {"val_sharpe": val_s, "test_sharpe": ts, "n_test": len(test_idx)}
-        print(f"  {year}: val={val_s:.3f}, test={ts:.3f}")
+        yearly_results[year] = {"val_sharpe": sum(val_sharpes) / len(val_sharpes), "test_sharpe": ts, "n_test": len(test_idx)}
+        print(f"  {year}: val={val_sharpes[0]:.3f}/{val_sharpes[1]:.3f}/{val_sharpes[2]:.3f}, test={ts:.3f}")
+        
         all_test_weights.append(w_test)
         all_test_Y.append(Y[test_idx])
     
     all_w = torch.cat(all_test_weights, dim=0)
     all_y = torch.cat(all_test_Y, dim=0)
     results = evaluate_and_print(all_w, all_y, "OOS_all", benchmark_n=N)
-    regime = analyze_attention(model, X, dates, indices)
+    regime = analyze_ensemble_attention(models, X, dates, indices)
+    
     elapsed = time.time() - t0
     print(f"\nTotal time: {elapsed:.1f}s")
     
     config = {
-        "model": "iTransformerEntropy_v2",
+        "model": "iTransformerEnsemble3",
         "n_params": n_params, "n_assets": N, "tickers": tickers,
         "d_model": 8, "n_patches": N_PATCHES, "temperature": 0.1,
-        "entropy_lambda": 0.1,
-        "architecture": "iTransformer + entropy reg (lambda=0.1)",
+        "entropy_lambda": 0.1, "ensemble_size": 3, "seeds": seeds,
+        "architecture": "Ensemble of 3 iTransformers with different seeds",
         "has_attention": True, "preserves_time": True,
         "regime_signal": regime,
     }
@@ -192,9 +214,8 @@ def main():
         "turnover": results["turnover"],
         "yearly": yearly_results,
         "elapsed_sec": round(elapsed, 1),
-        "loss_curve": {"train": [], "val": []},
     }
-    write_card(config, card_results, {"val_sharpe": [0.3, 1.5], "train_time": [30, 300]})
+    write_card(config, card_results, {"val_sharpe": [0.3, 1.5], "train_time": [60, 300]})
 
 
 if __name__ == "__main__":

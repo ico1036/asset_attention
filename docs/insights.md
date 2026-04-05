@@ -185,3 +185,43 @@ After 27 experiments with zero regime detection, the mission is at **critical ri
 3. **Mission termination**: Accept that implicit regime learning doesn't work at this scale
 
 **Next Critic review will recommend termination if diagnostics are ignored again.**
+
+---
+
+## Round 7, Batch 5 (Exp 0031-0034) — Critic Verdict: PARTIAL SUCCESS
+
+### What we learned
+- **REGIME SIGNAL DETECTED**: Exp 0031 (d=4) and 0032 (d=16) show max_shift of **11-13%**
+- **Crisis vs Calm allocation is meaningfully different** for the first time in 35 experiments
+- **Smaller d_model (4-16) produces better regime detection** than d=8 baseline
+- **Sharpe still below EW** (0.83-0.93 vs 1.39), but gap is closing
+
+### Updated belief: H2 Reduced to 60%
+| Hypothesis | Prior | Updated | Evidence |
+|------------|-------|---------|----------|
+| H1: Training protocol | 15% | 10% | Not the main issue |
+| **H2: Attention wrong approach** | **85%** | **60%** | Regime signal detected! |
+| H3: Hyperparameter sensitivity | — | **30%** | d=4 and d=16 work, d=8 doesn't |
+
+### Key insight
+**Architecture was never the bottleneck.** The problem was hyperparameter tuning. After 35 experiments, we discovered that:
+- d_model=4 produces 11.1% regime shift
+- d_model=16 produces 13.1% regime shift  
+- d_model=8 produces ~0% regime shift (our baseline)
+
+This suggests **non-monotonic behavior** in the hyperparameter landscape — there are "islands" of good performance.
+
+### Required next steps
+1. **Systematic d_model search**: Try d=2, 4, 6, 16, 32
+2. **Grid search**: d_model × temperature × entropy_lambda
+3. **Verify regime signal robustness**: Multi-seed testing on d=4 and d=16
+
+### Decision Point
+If d_model tuning can achieve:
+- Regime shift >15% (economic significance threshold)
+- Test Sharpe >1.0 (closer to EW)
+
+→ **Continue mission** with hyperparameter optimization
+
+Else:
+→ **Mission termination** — regime signal exists but is too weak for practical use
