@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Exp 0020: MDD Investigation
-Hypothesis: Understanding WHEN the model fails helps fix it.
-Change: Print detailed diagnostics during max drawdown periods.
+Exp 0017: iTransformer + Entropy Regularization (REQUIRED by Critic)
+Hypothesis: Combining best architecture (iTransformer) with entropy reg improves regime signal.
+Expected: val_sharpe [0.3, 1.5], train_time [30, 300]
+Regime check: crisis-calm entropy difference should be significant
 """
 
 import time, math, torch, torch.nn as nn
@@ -14,7 +15,7 @@ from prepare import (
 import numpy as np
 
 
-class iTransformer(nn.Module):
+class iTransformerEntropy(nn.Module):
     def __init__(self, n_assets=4, d_model=8, n_patches=12, temperature=0.1):
         super().__init__()
         self.n_assets = n_assets
@@ -60,7 +61,7 @@ class iTransformer(nn.Module):
         return sum(p.numel() for p in self.parameters())
 
 
-def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patience=20):
+def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patience=20, entropy_lambda=0.1):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     X_train, Y_train = X[train_idx], Y[train_idx]
     X_val, Y_val = X[val_idx], Y[val_idx]
@@ -72,10 +73,19 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patien
         optimizer.zero_grad()
         w, attn = model(X_train)
         port_ret = (w * Y_train).sum(dim=-1)
-        loss = -(port_ret.mean() / (port_ret.std() + 1e-8))
+        
+        # Sharpe loss
+        sharpe_loss = -(port_ret.mean() / (port_ret.std() + 1e-8))
+        
+        # Entropy regularization
+        row_entropy = -(attn * (attn + 1e-10).log()).sum(dim=-1)
+        mean_entropy = row_entropy.mean()
+        loss = sharpe_loss + entropy_lambda * mean_entropy
+        
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
+        
         if (epoch + 1) % 5 == 0:
             model.eval()
             with torch.no_grad():
@@ -122,17 +132,6 @@ def analyze_attention(model, X, dates, indices):
     return regime
 
 
-def find_max_drawdown_period(returns, dates, window=30):
-    """Find the period with worst rolling drawdown."""
-    cumret = np.cumprod(1 + returns) - 1
-    running_max = np.maximum.accumulate(cumret)
-    drawdown = cumret - running_max
-    min_idx = np.argmin(drawdown)
-    start_idx = max(0, min_idx - window)
-    end_idx = min(len(returns), min_idx + window)
-    return start_idx, min_idx, end_idx, drawdown[min_idx]
-
-
 def main():
     t0 = time.time()
     torch.manual_seed(42)
@@ -144,18 +143,18 @@ def main():
     print(f"Data: {T} days × {N} assets")
     X, Y, indices = make_sliding_windows(ret)
     splits = make_expanding_splits(dates, indices)
-    model = iTransformer(n_assets=N, d_model=8, n_patches=N_PATCHES)
+    model = iTransformerEntropy(n_assets=N, d_model=8, n_patches=N_PATCHES)
     n_params = model.count_params()
-    print(f"Model: iTransformerMDDInvestigation, {n_params} params")
+    print(f"Model: iTransformerEntropy, {n_params} params")
     assert n_params <= MAX_PARAMS
     
-    all_test_weights, all_test_Y, all_test_dates = [], [], []
+    all_test_weights, all_test_Y = [], []
     yearly_results = {}
     
     for split in splits:
         torch.manual_seed(42)
-        model = iTransformer(n_assets=N, d_model=8, n_patches=N_PATCHES)
-        val_s = train_one_split(model, X, Y, split["train"], split["val"])
+        model = iTransformerEntropy(n_assets=N, d_model=8, n_patches=N_PATCHES)
+        val_s = train_one_split(model, X, Y, split["train"], split["val"], entropy_lambda=0.1)
         model.eval()
         with torch.no_grad():
             test_idx = split["test"]
@@ -167,41 +166,22 @@ def main():
         print(f"  {year}: val={val_s:.3f}, test={ts:.3f}")
         all_test_weights.append(w_test)
         all_test_Y.append(Y[test_idx])
-        all_test_dates.extend([dates[indices[i]] for i in test_idx])
     
     all_w = torch.cat(all_test_weights, dim=0)
     all_y = torch.cat(all_test_Y, dim=0)
-    all_rets = (all_w * all_y).sum(dim=-1).numpy()
-    
-    # MDD Investigation
-    start_idx, min_idx, end_idx, max_dd = find_max_drawdown_period(all_rets, all_test_dates)
-    print(f"\n=== MDD Investigation ===")
-    print(f"Max Drawdown: {max_dd:.2%} at index {min_idx}")
-    print(f"Period: {all_test_dates[start_idx]} to {all_test_dates[end_idx]}")
-    print(f"\nPortfolio weights during drawdown period:")
-    for i in range(start_idx, min_idx + 1, 5):  # Sample every 5 days
-        w = all_w[i].tolist()
-        print(f"  {all_test_dates[i]}: SPY={w[0]:.1%}, TLT={w[1]:.1%}, GLD={w[2]:.1%}, SHY={w[3]:.1%}")
-    
-    print(f"\nAsset returns during drawdown period:")
-    for t, ticker in enumerate(tickers):
-        asset_rets = all_y[start_idx:end_idx, t].numpy()
-        cum_ret = np.prod(1 + asset_rets) - 1
-        print(f"  {ticker}: {cum_ret:.2%} cumulative")
-    
     results = evaluate_and_print(all_w, all_y, "OOS_all", benchmark_n=N)
     regime = analyze_attention(model, X, dates, indices)
     elapsed = time.time() - t0
     print(f"\nTotal time: {elapsed:.1f}s")
     
     config = {
-        "model": "iTransformerMDDInvestigation",
+        "model": "iTransformerEntropy_v2",
         "n_params": n_params, "n_assets": N, "tickers": tickers,
         "d_model": 8, "n_patches": N_PATCHES, "temperature": 0.1,
-        "architecture": "iTransformer with MDD diagnostics",
+        "entropy_lambda": 0.1,
+        "architecture": "iTransformer + entropy reg (lambda=0.1)",
         "has_attention": True, "preserves_time": True,
         "regime_signal": regime,
-        "mdd_period": {"start": all_test_dates[start_idx], "end": all_test_dates[end_idx], "depth": float(max_dd)},
     }
     card_results = {
         "val_sharpe": sum(r["val_sharpe"] for r in yearly_results.values()) / len(yearly_results),

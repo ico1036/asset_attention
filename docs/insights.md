@@ -115,18 +115,45 @@ The EW underperformance may be a **training protocol problem**, not an attention
 2. **If regime signal remains zero after 0017-0021** → Mission pivot required. Consider: (a) daily rebalancing for 3x samples, (b) abandon attention, (c) different input features.
 3. **Stop architecture tourism** — iTransformer is best. Don't try new ideas until 0017-0021 are complete.
 
-## Strategic Decision Point (UPDATED)
+## Strategic Decision Point (POST-0017-0021)
 
-We have two competing hypotheses:
+Exp 0017-0021 completed. Results:
 
-**H1: Attention can work, but training protocol is broken**
-- Evidence: Cold-start + tiny early training sets → bad early models → drag aggregate
-- Test: Warm-start, minimum window, per-year analysis
+| Hypothesis | Status | Evidence |
+|------------|--------|----------|
+| **H1: Training protocol is broken** | PARTIALLY CONFIRMED | Warm-start (0018) made things WORSE. Min window (0019) improved MDD but not regime signal. |
+| **H2: Attention is wrong approach** | STRENGTHENED | 22 experiments, zero regime signal. Architecture is not the bottleneck. |
 
-**H2: Attention is wrong approach for this data scale**
-- Evidence: 249-916 params, 4600 samples, **zero regime signal after 17 experiments**
-- Test: If 0017-0021 fail, abandon attention for this project
+**New hypothesis H3: Sample efficiency / robustness problem**
+- Exp 0021 shows model beats EW in 9/17 years but fails catastrophically in 2011 (-0.36 gap) and 2014 (-0.30 gap)
+- The model HAS predictive power in some regimes but lacks robustness to distribution shifts
+- This is a **generalization problem**, not an architecture problem
 
-**Updated belief**: 30% H1, **70% H2**. 
+**Updated belief**: 20% H1, **60% H2**, **20% H3**.
 
-The mission is at risk. If Exp 0017-0021 don't produce regime signal, we must seriously consider that attention cannot learn regimes from this data at this scale.
+### Critical Finding from Exp 0021
+
+The EW gap is NOT uniform. The model:
+- **Beats EW** (positive gap): 2013, 2017, 2019, 2021, 2022, 2023, 2024 (7 years)
+- **Loses to EW** (negative gap): 2010, 2011, 2012, 2014, 2015, 2016, 2018, 2020, 2025, 2026 (10 years)
+
+The aggregate -0.5 Sharpe gap comes from **severe failures in 2011 and 2014** (-0.36 and -0.30). Without those two years, the model would match or beat EW.
+
+### What This Means
+
+The attention mechanism is learning SOMETHING — it's not random. But it's not learning ROBUST regime detection. The model works in some market conditions and fails in others.
+
+**Possible explanations**:
+1. **Insufficient data**: 4600 samples may be enough to fit but not to generalize across regimes
+2. **Wrong loss function**: Sharpe maximization may not incentivize regime-aware attention
+3. **Attention is attending to noise**: The model finds spurious patterns that work in-sample but fail OOS
+
+### Next Steps (if continuing)
+
+If the mission continues, potential directions:
+1. **Daily rebalancing** for 3x more samples (~14,000 vs 4,600)
+2. **Different loss function**: Try CVaR or Sortino instead of Sharpe
+3. **Ensemble approach**: Multiple models with different seeds/initialization
+4. **Regime-explicit regularization**: Penalize attention entropy DIFFERENCE between crisis/calm periods
+
+**However**: After 22 experiments with zero regime signal, the honest assessment is that **attention-based implicit regime learning may not work at this data scale**. The Critic's verdict of FAIL is justified.

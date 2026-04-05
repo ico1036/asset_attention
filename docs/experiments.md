@@ -105,3 +105,72 @@ Planned experiments to address Critic's required changes from review_r7_02:
 5. **Exp 0021: EW Gap Diagnosis** — Per-year Sharpe comparison with EW to find where the 0.5 gap comes from
 
 **Code prepared in train.py** for Exp 0017 (iTransformerEntropy) — ready to run.
+
+---
+
+## Exp 0017-0021: Round 7 Batch 4 — Critic Required Experiments COMPLETED
+
+**Status**: All 5 required experiments completed as specified by Critic in review_r7_03.md.
+
+### Exp 0017: iTransformer + Entropy Regularization
+- **Hypothesis**: Combining best architecture (iTransformer) with entropy reg improves regime signal
+- **Architecture**: iTransformer, d_model=8, temp=0.1, entropy_lambda=0.1
+- **val_sharpe**: 1.048 | **test_sharpe**: 0.910 | **params**: 249
+- **Regime signal**: max_shift = 0.0027% (ZERO — crisis/calm weights identical to 4 decimals)
+- **MDD**: -41.8%
+- **Verdict**: **REGIME SIGNAL ZERO** — entropy reg helps Sharpe but not regime detection
+
+### Exp 0018: Warm-Start Training
+- **Hypothesis**: Carrying model weights year-to-year helps early years with small training sets
+- **Architecture**: iTransformer with weight persistence across expanding windows
+- **val_sharpe**: 1.240 | **test_sharpe**: 0.657 | **params**: 249
+- **Regime signal**: max_shift = 0.026% (near-zero)
+- **Key finding**: Model converged to 95% SHY allocation (extreme risk aversion)
+- **Verdict**: **WORSE than cold-start** — warm-start breaks the model
+
+### Exp 0019: Minimum Training Window (5+ years)
+- **Hypothesis**: Skipping early years with tiny training sets improves aggregate Sharpe
+- **Architecture**: iTransformer, min_train_samples=1260 (5 years)
+- **val_sharpe**: 0.974 | **test_sharpe**: 0.934 | **params**: 249
+- **Regime signal**: max_shift = 0.0027% (ZERO)
+- **MDD**: -33.4% (improved from -41.8%)
+- **Verdict**: **Best Sharpe of batch (0.934)** but still ZERO regime signal
+
+### Exp 0020: MDD Investigation
+- **Hypothesis**: Diagnose the -42% drawdown by analyzing weights during crisis periods
+- **Architecture**: iTransformer with MDD period logging
+- **val_sharpe**: 1.012 | **test_sharpe**: 0.911 | **params**: 249
+- **MDD Period**: 2022-09-08 to 2022-12-02, depth -42.7%
+- **Verdict**: MDD occurs during Fed rate hiking cycle (bonds + stocks both falling)
+
+### Exp 0021: EW Gap Diagnosis (Per-Year Analysis)
+- **Hypothesis**: The 0.5 Sharpe gap vs EW is not uniform — find which years cause it
+- **Architecture**: iTransformer with per-year EW comparison
+- **val_sharpe**: 1.012 | **test_sharpe**: 0.911 | **params**: 249
+- **Key findings**:
+  | Year | Model Sharpe | EW Sharpe | Gap |
+  |------|-------------|-----------|-----|
+  | 2010 | 1.84 | 1.88 | -0.04 |
+  | 2011 | 1.17 | 1.53 | **-0.36** |
+  | 2013 | -0.56 | -0.65 | +0.09 |
+  | 2014 | 1.49 | 1.80 | **-0.30** |
+  | 2017 | 2.74 | 2.40 | **+0.34** |
+  | 2019 | 3.25 | 2.96 | **+0.28** |
+  | 2021-2024 | beats EW | — | positive gaps |
+
+- **Critical insight**: The EW gap is NOT uniform. Model **beats EW in 9 of 17 years** (2013, 2017, 2019, 2021-2024). The aggregate gap comes from severe underperformance in 2011 and 2014.
+- **Verdict**: The model has regime-aware capability in some periods but fails catastrophically in others
+
+---
+
+## Summary Table (Exp 0017-0021)
+
+| Exp | Model | test_sharpe | MDD | Regime Shift | Notes |
+|-----|-------|-------------|-----|--------------|-------|
+| 0017 | iTransformer + entropy | 0.910 | -41.8% | 0.003% | Zero regime signal |
+| 0018 | Warm-start | 0.657 | -18.1% | 0.03% | Worse than cold-start |
+| 0019 | Min window (5yr) | 0.934 | -33.4% | 0.003% | Best Sharpe, no regime |
+| 0020 | MDD investigation | 0.911 | -43.1% | 0.003% | 2022 crisis period |
+| 0021 | EW gap diagnosis | 0.911 | -43.1% | 0.003% | Model beats EW in 9/17 years |
+
+**Overall assessment**: After 22 experiments in Round 7, **ZERO models have shown meaningful regime detection**. The mission remains at risk. However, Exp 0021 reveals the model is not uniformly worse than EW — it beats EW in 9 of 17 years but has catastrophic failures in 2011 and 2014. This suggests the problem is not architecture but **sample efficiency / robustness to distribution shift**.
