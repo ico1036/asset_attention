@@ -95,7 +95,27 @@ The EW underperformance may be a **training protocol problem**, not an attention
 2. **If regime signal remains zero after 0017-0021**, consider: (a) attention is wrong approach for this data, or (b) need different input features, or (c) need much more data.
 3. **Honest assessment**: After 17 experiments in Round 7, no model has shown meaningful regime detection. The mission is at risk.
 
-## Strategic Decision Point
+## Round 7, Batch 3 (Exp 0009-0016) — Critic Verdict: **FAIL**
+
+### What we learned
+- **ZERO regime signal persists** — max_shift < 0.001 across ALL 8 experiments. Crisis-calm weight shifts are 0.002-0.01%, economically meaningless.
+- **UnifiedTemporalAttention was a mistake** — 4 experiments wasted on architecture that produces test_sharpe ~0.47. Explorer deviated from required changes.
+- **iTransformer + entropy reg (Exp 0013) best Sharpe but worst regime** — 0.931 test_sharpe, 0.003% weight shift. Regularization helps metrics, not mission.
+- **All models cluster 0.85-0.93** — Hard ceiling. 17 experiments, ~8 architectures, same result.
+- **EW gap = 0.5 Sharpe, unchanged** — Attention destroys 33% of EW's risk-adjusted return.
+- **MDD remains -32 to -48%** — Worse than static ablation (-31.6%).
+
+### ⚠️ Critic Required Changes (CRITICAL — Must Address)
+1. **Run Exp 0017-0021 exactly as planned** — NO new architectures, NO deviations:
+   - 0017: iTransformer + entropy reg (code ready, RUN IT)
+   - 0018: Warm-start training
+   - 0019: Minimum training window (skip early years)
+   - 0020: MDD investigation (print weights during drawdown)
+   - 0021: EW gap diagnosis (per-year comparison)
+2. **If regime signal remains zero after 0017-0021** → Mission pivot required. Consider: (a) daily rebalancing for 3x samples, (b) abandon attention, (c) different input features.
+3. **Stop architecture tourism** — iTransformer is best. Don't try new ideas until 0017-0021 are complete.
+
+## Strategic Decision Point (UPDATED)
 
 We have two competing hypotheses:
 
@@ -104,7 +124,9 @@ We have two competing hypotheses:
 - Test: Warm-start, minimum window, per-year analysis
 
 **H2: Attention is wrong approach for this data scale**
-- Evidence: 249-916 params, 4600 samples, zero regime signal after 17 experiments
+- Evidence: 249-916 params, 4600 samples, **zero regime signal after 17 experiments**
 - Test: If 0017-0021 fail, abandon attention for this project
 
-**Current belief**: 60% H1, 40% H2. Next batch will decide.
+**Updated belief**: 30% H1, **70% H2**. 
+
+The mission is at risk. If Exp 0017-0021 don't produce regime signal, we must seriously consider that attention cannot learn regimes from this data at this scale.
