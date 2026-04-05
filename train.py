@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 """
-Exp 0017: iTransformer + Entropy Regularization
-Hypothesis: Combine best architecture (iTransformer) with entropy regularization.
-Expected: val_sharpe [0.5, 1.5], improved weight variation
-Change: Add entropy_lambda=0.1 to loss on iTransformer architecture.
+Exp 0018: Warm-Start Training
+Hypothesis: Carrying model weights across expanding windows helps early years.
+Change: Initialize each year's model from prior year's trained weights.
+Note: Using 100 epochs for faster completion.
 """
 
 import time, math, torch, torch.nn as nn
 from prepare import (
     load_data, make_sliding_windows, make_expanding_splits,
     evaluate_and_print, write_card, sharpe,
-    N_ASSETS, REBAL_FREQ, MAX_PARAMS, LOOKBACK, PATCH_SIZE, N_PATCHES,
-    TX_COST_BPS,
+    N_ASSETS, MAX_PARAMS, N_PATCHES,
 )
 
 
-class iTransformerEntropy(nn.Module):
+class iTransformer(nn.Module):
     def __init__(self, n_assets=4, d_model=8, n_patches=12, temperature=0.1):
         super().__init__()
         self.n_assets = n_assets
@@ -61,7 +60,7 @@ class iTransformerEntropy(nn.Module):
         return sum(p.numel() for p in self.parameters())
 
 
-def train_one_split(model, X, Y, train_idx, val_idx, epochs=500, lr=1e-3, patience=50, entropy_lambda=0.1):
+def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patience=20):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     X_train, Y_train = X[train_idx], Y[train_idx]
     X_val, Y_val = X[val_idx], Y[val_idx]
@@ -73,11 +72,7 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=500, lr=1e-3, patien
         optimizer.zero_grad()
         w, attn = model(X_train)
         port_ret = (w * Y_train).sum(dim=-1)
-        sharpe_loss = -(port_ret.mean() / (port_ret.std() + 1e-8))
-        attn_per_asset = attn.mean(dim=0)
-        entropy_per_query = -(attn_per_asset * (attn_per_asset + 1e-10).log()).sum(dim=-1)
-        mean_entropy = entropy_per_query.mean()
-        loss = sharpe_loss + entropy_lambda * mean_entropy
+        loss = -(port_ret.mean() / (port_ret.std() + 1e-8))
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
@@ -97,14 +92,13 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=500, lr=1e-3, patien
                     break
     if best_state is not None:
         model.load_state_dict(best_state)
-    return best_val
+    return best_val, best_state
 
 
 def analyze_attention(model, X, dates, indices):
     model.eval()
     with torch.no_grad():
         w, attn = model(X, return_attn=True)
-    tickers = ["SPY", "TLT", "GLD", "SHY"]
     years = [int(dates[idx][:4]) for idx in indices]
     row_entropy = -(attn * (attn + 1e-10).log()).sum(dim=-1)
     per_asset_entropy = row_entropy.mean(dim=2)
@@ -135,20 +129,24 @@ def main():
     ret = d["log_return"]
     dates = d["dates"]
     T, N = ret.shape
-    print(f"Data: {T} days × {N} assets ({d['tickers']})")
+    print(f"Data: {T} days × {N} assets")
     X, Y, indices = make_sliding_windows(ret)
-    print(f"Samples: {len(X)}")
     splits = make_expanding_splits(dates, indices)
-    model = iTransformerEntropy(n_assets=N, d_model=8, n_patches=N_PATCHES)
+    model = iTransformer(n_assets=N, d_model=8, n_patches=N_PATCHES)
     n_params = model.count_params()
-    print(f"Model: iTransformerEntropy, {n_params} params")
+    print(f"Model: iTransformerWarmStart, {n_params} params")
     assert n_params <= MAX_PARAMS
+    
     all_test_weights, all_test_Y = [], []
     yearly_results = {}
+    prev_state = None
+    
     for split in splits:
         torch.manual_seed(42)
-        model = iTransformerEntropy(n_assets=N, d_model=8, n_patches=N_PATCHES)
-        val_s = train_one_split(model, X, Y, split["train"], split["val"], entropy_lambda=0.1)
+        model = iTransformer(n_assets=N, d_model=8, n_patches=N_PATCHES)
+        if prev_state is not None:
+            model.load_state_dict(prev_state)
+        val_s, best_state = train_one_split(model, X, Y, split["train"], split["val"])
         model.eval()
         with torch.no_grad():
             test_idx = split["test"]
@@ -160,18 +158,20 @@ def main():
         print(f"  {year}: val={val_s:.3f}, test={ts:.3f}")
         all_test_weights.append(w_test)
         all_test_Y.append(Y[test_idx])
+        prev_state = best_state
+    
     all_w = torch.cat(all_test_weights, dim=0)
     all_y = torch.cat(all_test_Y, dim=0)
     results = evaluate_and_print(all_w, all_y, "OOS_all", benchmark_n=N)
     regime = analyze_attention(model, X, dates, indices)
     elapsed = time.time() - t0
     print(f"\nTotal time: {elapsed:.1f}s")
+    
     config = {
-        "model": "iTransformerEntropy",
+        "model": "iTransformerWarmStart",
         "n_params": n_params, "n_assets": N, "tickers": d["tickers"],
-        "d_model": 8, "n_heads": 1, "n_patches": N_PATCHES, "temperature": 0.1,
-        "entropy_lambda": 0.1,
-        "architecture": "iTransformer + entropy regularization (lambda=0.1)",
+        "d_model": 8, "n_patches": N_PATCHES, "temperature": 0.1,
+        "architecture": "iTransformer with warm-start training (carry weights year-to-year)",
         "has_attention": True, "preserves_time": True,
         "regime_signal": regime,
     }
@@ -186,7 +186,7 @@ def main():
         "elapsed_sec": round(elapsed, 1),
         "loss_curve": {"train": [], "val": []},
     }
-    write_card(config, card_results, {"val_sharpe": [0.5, 1.5], "train_time": [30, 300]})
+    write_card(config, card_results, {"val_sharpe": [0.3, 1.5], "train_time": [20, 200]})
 
 
 if __name__ == "__main__":
