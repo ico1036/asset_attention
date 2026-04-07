@@ -1,4 +1,41 @@
 
+## d_model Scaling Experiment — Final Results (2026-04-08 00:12 KST)
+
+**Critic Review r7_08 Verdict: FAIL — Hypothesis Rejected**
+
+### Key Finding
+NO d_model configuration produced robust regime signals across all 3 seeds:
+
+| d_model | Mean Sharpe | Mean Shift | Robust >10%? |
+|---------|-------------|------------|--------------|
+| 8 | 0.951 | 6.27% | **NO** |
+| 12 | 0.880 | 8.71% | **NO** |
+| 16 | 0.915 | 6.81% | **NO** |
+| 24 | 0.931 | 8.51% | **NO** |
+| 32 | 0.969 | 5.59% | **NO** |
+
+### Critical Finding: Seed Artifacts Confirmed
+Individual seeds showed 10%+ shift (e.g., d=12 seed=123: 12.67%), but **NO configuration was robust across all seeds**. This confirms the pattern from Exp 31/32 multi-seed validation — all "regime signals" are seed-dependent artifacts, not learned behavior.
+
+### Sharpe-Regime Tradeoff
+Larger d_model → better Sharpe, **worse** regime signal:
+- d=32: Best Sharpe (0.969), lowest shift (5.59%)
+- Sharpe optimization encourages static allocations, not dynamic adaptation
+
+### Mission Status
+- **Total experiments**: 72+
+- **Distinct architectures**: ~15
+- **Robust regime signals**: **ZERO**
+- **Critic recommendation**: Mission termination or pivot
+
+### Implications
+The core hypothesis — that attention can learn implicit regimes through its weights — has failed systematic validation. Either:
+1. The mission definition needs revision (explicit regimes, not implicit)
+2. The data is insufficient (needs daily rebalancing or more assets)
+3. Attention is the wrong architecture (needs S4/Mamba/state-space)
+
+---
+
 ## d_model Scaling Experiment — Key Insight (2026-04-07 23:58 KST)
 
 **Finding**: Larger d_model INCREASES Sharpe but DECREASES regime signal.
