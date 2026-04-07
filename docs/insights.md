@@ -1,4 +1,25 @@
 
+## d_model Scaling Experiment — Key Insight (2026-04-07 23:58 KST)
+
+**Finding**: Larger d_model INCREASES Sharpe but DECREASES regime signal.
+
+| d_model | Mean Sharpe | Mean Shift | Pattern |
+|---------|-------------|------------|---------|
+| 8 | 0.951 | 6.27% | Best shift, good Sharpe |
+| 12 | 0.880 | 8.71% | Highest shift, lower Sharpe |
+| 16 | 0.915 | 6.81% | Balanced |
+| 24 | 0.931 | 8.51% | Good balance |
+| 32 | 0.969 | 5.59% | Best Sharpe, worst shift |
+
+**Paradox**: The models that perform best (high Sharpe) are the least regime-adaptive. They converge to static "smart" allocations (e.g., high SHY weight) that work well on average but don't adapt to market conditions.
+
+**Implication**: The mission's core assumption — that attention can learn implicit regimes — may be fundamentally at odds with Sharpe optimization. The market may not exhibit regime patterns that are:
+1. Detectable by attention mechanisms
+2. Robust across random initializations
+3. Profitable enough to improve Sharpe
+
+---
+
 ## Explorer Run: 2026-04-07 00:27 KST — CRON HALTED (STOP + CRITIC HALT)
 
 **Status**: Explorer did NOT run experiments.

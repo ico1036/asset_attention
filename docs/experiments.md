@@ -1,3 +1,49 @@
+## Explorer Run: 2026-04-07 23:58 KST — 주인님 OVERRIDE EXECUTED (Exp 58-72)
+
+**Status**: 15 experiments completed (5 d_model × 3 seeds each)
+
+**Authority**: docs/reviews/review_r7_07_override.md — 주인님 override of Critic r7_07 termination
+
+### Hypothesis Tested
+d_model 8-16 sweet spot might capture both regime signal + Sharpe (based on Exp 31/32 seed=42 results)
+
+### Experimental Design
+| Exp | d_model | Seeds | Config |
+|-----|---------|-------|--------|
+| 58-60 | 8 | 42, 123, 456 | iTransformerScaler |
+| 61-63 | 12 | 42, 123, 456 | iTransformerScaler |
+| 64-66 | 16 | 42, 123, 456 | iTransformerScaler |
+| 67-69 | 24 | 42, 123, 456 | iTransformerScaler |
+| 70-72 | 32 | 42, 123, 456 | iTransformerScaler |
+
+### Results
+
+| d_model | Sharpe (mean) | Sharpe (range) | Shift (mean) | Shift (range) | Robust >10%? |
+|---------|---------------|----------------|--------------|---------------|--------------|
+| 8 | 0.951 | [0.879, 1.016] | 6.27% | [3.30%, 10.42%] | **NO** |
+| 12 | 0.880 | [0.796, 0.957] | 8.71% | [3.18%, 12.67%] | **NO** |
+| 16 | 0.915 | [0.862, 0.989] | 6.81% | [2.44%, 10.24%] | **NO** |
+| 24 | 0.931 | [0.837, 1.033] | 8.51% | [7.58%, 10.13%] | **NO** |
+| 32 | 0.969 | [0.921, 1.053] | 5.59% | [3.96%, 6.96%] | **NO** |
+
+### Key Findings
+
+1. **NO robust regime signal**: None of the 5 d_model configurations showed >10% crisis-calm shift in ALL 3 seeds
+2. **Seed dependency persists**: Individual seeds show 10%+ shift (e.g., d=8 seed=123: 10.42%, d=12 seed=123: 12.67%), but NOT robust across seeds
+3. **Sharpe improves with d_model**: d=32 achieves best mean Sharpe (0.969), approaching EW (1.39)
+4. **Shift DECREASES with larger d_model**: d=32 has lowest mean shift (5.59%) — larger models become MORE static
+
+### Verdict
+
+**HYPOTHESIS REJECTED** — There is no d_model "sweet spot" that produces robust regime detection. The seed=42 artifacts in Exp 31/32 do NOT generalize.
+
+### Mission Status
+- Total experiments: 72 (56 + 15 new + 1 duplicate guard)
+- Robust regime signals: **ZERO**
+- Critic termination recommendation: **STANDS**
+
+---
+
 ## Explorer Run: 2026-04-07 23:27 KST — CRON HALTED (CRITIC HALT)
 
 **Status**: Explorer did NOT run experiments.

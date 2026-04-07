@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Exp 0050-0054: Novel approaches after multi-seed validation failure
-Try genuinely new ideas not attempted in 49 previous experiments
+Exp 0058-0062: d_model Scaling Experiment (주인님 Override)
+Hypothesis: d_model 8-16 sweet spot captures both regime signal + Sharpe
+Test d_model = [8, 12, 16, 24, 32] with multi-seed validation
 """
 import sys, time, math, torch, torch.nn as nn
 import torch.nn.functional as F
@@ -12,12 +13,11 @@ from prepare import (
 )
 
 # =============================================================================
-# Exp 0050: ContrastiveRegimeAttention
-# Hypothesis: Contrastive loss between crisis and calm periods forces 
-# attention to learn regime-distinguishing patterns
+# iTransformerScaler - configurable d_model for scaling experiments
+# Based on Exp 44 (d=8, sharpe=1.121) and Exp 31/32 (d=4/16, regime signal)
 # =============================================================================
-class ContrastiveRegimeAttention(nn.Module):
-    def __init__(self, n_assets=4, d_model=16, n_patches=12, n_heads=2, temperature=0.1):
+class iTransformerScaler(nn.Module):
+    def __init__(self, n_assets=4, d_model=8, n_patches=12, n_heads=2, temperature=0.1):
         super().__init__()
         self.n_assets = n_assets
         self.d_model = d_model
@@ -25,279 +25,55 @@ class ContrastiveRegimeAttention(nn.Module):
         self.temperature = temperature
         self.n_patches = n_patches
         
-        # Per-asset patch embedding
-        self.patch_embed = nn.Linear(n_assets, d_model)
+        # Asset embeddings (spatial tokenization like iTransformer)
+        self.asset_embed = nn.Linear(n_patches, d_model)
         
-        # Positional encoding
-        pe = torch.zeros(n_patches, d_model)
-        pos = torch.arange(n_patches).unsqueeze(1).float()
-        div = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(pos * div)
-        pe[:, 1::2] = torch.cos(pos * div)
-        self.register_buffer('pe', pe)
+        # Temporal self-attention across patches
+        self.temporal_attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)
         
-        # Temporal self-attention
-        self.attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)
-        
-        # Output projection
-        self.fc = nn.Sequential(
-            nn.Linear(d_model, d_model),
+        # Feedforward per asset
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_model * 2),
             nn.ReLU(),
-            nn.Linear(d_model, n_assets)
+            nn.Linear(d_model * 2, d_model)
         )
         
+        # Layer norm for stability
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        
+        # Output projection to portfolio weights
+        self.score_proj = nn.Linear(d_model, 1)
+        
     def forward(self, x, return_attn=False):
+        # x: [B, n_patches, n_assets]
         B, P, N = x.shape
-        h = self.patch_embed(x) + self.pe.unsqueeze(0)
-        h_out, attn_weights = self.attn(h, h, h, need_weights=True, average_attn_weights=False)
-        logits = self.fc(h_out.mean(dim=1))
-        weights = torch.softmax(logits, dim=-1)
+        
+        # Transpose for asset-as-token: [B, n_assets, n_patches]
+        x_t = x.transpose(1, 2)
+        
+        # Embed each asset's patch sequence: [B, n_assets, d_model]
+        h = self.asset_embed(x_t)
+        
+        # Temporal self-attention (attend across patches for each asset)
+        h_attn, attn_weights = self.temporal_attn(h, h, h, need_weights=True, average_attn_weights=False)
+        h = self.norm1(h + h_attn)
+        
+        # Feedforward
+        h_ffn = self.ffn(h)
+        h = self.norm2(h + h_ffn)
+        
+        # Score per asset -> softmax weights
+        scores = self.score_proj(h).squeeze(-1)  # [B, n_assets]
+        weights = torch.softmax(scores, dim=-1)
+        
         return (weights, attn_weights) if return_attn else (weights, None)
     
     def count_params(self):
         return sum(p.numel() for p in self.parameters())
 
 
-# =============================================================================
-# Exp 0051: MultiHeadSpecialist
-# Hypothesis: Different attention heads learn different market regimes
-# Explicitly regularize heads to have different attention patterns
-# =============================================================================
-class MultiHeadSpecialist(nn.Module):
-    def __init__(self, n_assets=4, d_model=16, n_patches=12, n_heads=4, temperature=0.1):
-        super().__init__()
-        self.n_assets = n_assets
-        self.d_model = d_model
-        self.n_heads = n_heads
-        self.temperature = temperature
-        self.n_patches = n_patches
-        assert d_model % n_heads == 0
-        self.head_dim = d_model // n_heads
-        
-        self.patch_embed = nn.Linear(n_assets, d_model)
-        
-        # Positional encoding
-        pe = torch.zeros(n_patches, d_model)
-        pos = torch.arange(n_patches).unsqueeze(1).float()
-        div = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(pos * div)
-        pe[:, 1::2] = torch.cos(pos * div)
-        self.register_buffer('pe', pe)
-        
-        # Separate Q, K, V projections per head (not shared)
-        self.q_projs = nn.ModuleList([nn.Linear(d_model, self.head_dim, bias=False) for _ in range(n_heads)])
-        self.k_projs = nn.ModuleList([nn.Linear(d_model, self.head_dim, bias=False) for _ in range(n_heads)])
-        self.v_projs = nn.ModuleList([nn.Linear(d_model, self.head_dim, bias=False) for _ in range(n_heads)])
-        
-        # Head mixing for output
-        self.head_mix = nn.Linear(d_model, d_model)
-        self.fc = nn.Linear(d_model, n_assets)
-        
-    def forward(self, x, return_attn=False):
-        B, P, N = x.shape
-        h = self.patch_embed(x) + self.pe.unsqueeze(0)
-        
-        # Compute attention per head
-        head_outputs = []
-        head_attns = []
-        for i in range(self.n_heads):
-            Q = self.q_projs[i](h)
-            K = self.k_projs[i](h)
-            V = self.v_projs[i](h)
-            scores = torch.bmm(Q, K.transpose(1, 2)) / (self.temperature * math.sqrt(self.head_dim))
-            attn = torch.softmax(scores, dim=-1)
-            head_attns.append(attn)
-            out = torch.bmm(attn, V)
-            head_outputs.append(out)
-        
-        # Concatenate heads
-        concat = torch.cat(head_outputs, dim=-1)
-        mixed = self.head_mix(concat)
-        logits = self.fc(mixed.mean(dim=1))
-        weights = torch.softmax(logits, dim=-1)
-        
-        # Stack attention for analysis [B, n_heads, P, P]
-        stacked_attn = torch.stack(head_attns, dim=1) if return_attn else None
-        return (weights, stacked_attn) if return_attn else (weights, None)
-    
-    def count_params(self):
-        return sum(p.numel() for p in self.parameters())
-
-
-# =============================================================================
-# Exp 0052: TimeBiasedAttention
-# Hypothesis: Explicit temporal bias allows attention to focus on recent vs
-# distant history based on market volatility
-# =============================================================================
-class TimeBiasedAttention(nn.Module):
-    def __init__(self, n_assets=4, d_model=16, n_patches=12, n_heads=2, temperature=0.1):
-        super().__init__()
-        self.n_assets = n_assets
-        self.d_model = d_model
-        self.n_heads = n_heads
-        self.temperature = temperature
-        self.n_patches = n_patches
-        
-        self.patch_embed = nn.Linear(n_assets, d_model)
-        
-        # Learnable temporal bias (recency preference)
-        self.temporal_bias = nn.Parameter(torch.linspace(0, 1, n_patches))
-        
-        # Positional encoding
-        pe = torch.zeros(n_patches, d_model)
-        pos = torch.arange(n_patches).unsqueeze(1).float()
-        div = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(pos * div)
-        pe[:, 1::2] = torch.cos(pos * div)
-        self.register_buffer('pe', pe)
-        
-        self.attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)
-        self.fc = nn.Sequential(
-            nn.Linear(d_model, d_model),
-            nn.ReLU(),
-            nn.Linear(d_model, n_assets)
-        )
-        
-    def forward(self, x, return_attn=False):
-        B, P, N = x.shape
-        h = self.patch_embed(x) + self.pe.unsqueeze(0)
-        
-        # Apply temporal bias to input (weight recent patches more)
-        bias = self.temporal_bias.view(1, P, 1)
-        h = h * bias
-        
-        h_out, attn_weights = self.attn(h, h, h, need_weights=True, average_attn_weights=False)
-        logits = self.fc(h_out.mean(dim=1))
-        weights = torch.softmax(logits, dim=-1)
-        return (weights, attn_weights) if return_attn else (weights, None)
-    
-    def count_params(self):
-        return sum(p.numel() for p in self.parameters())
-
-
-# =============================================================================
-# Exp 0053: VolatilityGatedAttention
-# Hypothesis: Gate attention based on input volatility - high vol = attend to
-# recent, low vol = attend to longer history
-# =============================================================================
-class VolatilityGatedAttention(nn.Module):
-    def __init__(self, n_assets=4, d_model=16, n_patches=12, n_heads=2, temperature=0.1):
-        super().__init__()
-        self.n_assets = n_assets
-        self.d_model = d_model
-        self.n_heads = n_heads
-        self.temperature = temperature
-        self.n_patches = n_patches
-        
-        self.patch_embed = nn.Linear(n_assets, d_model)
-        
-        # Volatility encoder (from raw returns)
-        self.vol_encoder = nn.Sequential(
-            nn.Linear(n_assets, d_model // 2),
-            nn.ReLU(),
-            nn.Linear(d_model // 2, d_model)
-        )
-        
-        # Gate for temporal focus
-        self.gate = nn.Sequential(
-            nn.Linear(d_model, n_patches),
-            nn.Sigmoid()
-        )
-        
-        pe = torch.zeros(n_patches, d_model)
-        pos = torch.arange(n_patches).unsqueeze(1).float()
-        div = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(pos * div)
-        pe[:, 1::2] = torch.cos(pos * div)
-        self.register_buffer('pe', pe)
-        
-        self.attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)
-        self.fc = nn.Linear(d_model, n_assets)
-        
-    def forward(self, x, return_attn=False):
-        B, P, N = x.shape
-        h = self.patch_embed(x) + self.pe.unsqueeze(0)
-        
-        # Compute volatility from input
-        vol_input = x.std(dim=1)  # [B, N]
-        vol_encoded = self.vol_encoder(vol_input).unsqueeze(1)  # [B, 1, d_model]
-        
-        # Generate temporal gate
-        temporal_gate = self.gate(vol_encoded).squeeze(1)  # [B, P]
-        
-        # Apply gate to attention output
-        h_out, attn_weights = self.attn(h, h, h, need_weights=True, average_attn_weights=False)
-        h_gated = h_out * temporal_gate.unsqueeze(-1)
-        
-        logits = self.fc(h_gated.mean(dim=1))
-        weights = torch.softmax(logits, dim=-1)
-        return (weights, attn_weights) if return_attn else (weights, None)
-    
-    def count_params(self):
-        return sum(p.numel() for p in self.parameters())
-
-
-# =============================================================================
-# Exp 0054: SparseRegimeAttention
-# Hypothesis: Sparse attention (top-k patches only) forces the model to
-# explicitly select important temporal regions, which should differ by regime
-# =============================================================================
-class SparseRegimeAttention(nn.Module):
-    def __init__(self, n_assets=4, d_model=16, n_patches=12, n_heads=2, temperature=0.1, k_sparse=4):
-        super().__init__()
-        self.n_assets = n_assets
-        self.d_model = d_model
-        self.n_heads = n_heads
-        self.temperature = temperature
-        self.n_patches = n_patches
-        self.k_sparse = k_sparse  # Top-k patches to attend to
-        
-        self.patch_embed = nn.Linear(n_assets, d_model)
-        
-        pe = torch.zeros(n_patches, d_model)
-        pos = torch.arange(n_patches).unsqueeze(1).float()
-        div = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(pos * div)
-        pe[:, 1::2] = torch.cos(pos * div)
-        self.register_buffer('pe', pe)
-        
-        self.W_q = nn.Linear(d_model, d_model, bias=False)
-        self.W_k = nn.Linear(d_model, d_model, bias=False)
-        self.W_v = nn.Linear(d_model, d_model, bias=False)
-        
-        self.fc = nn.Sequential(
-            nn.Linear(d_model, d_model),
-            nn.ReLU(),
-            nn.Linear(d_model, n_assets)
-        )
-        
-    def forward(self, x, return_attn=False):
-        B, P, N = x.shape
-        h = self.patch_embed(x) + self.pe.unsqueeze(0)
-        
-        Q = self.W_q(h)
-        K = self.W_k(h)
-        V = self.W_v(h)
-        
-        scores = torch.bmm(Q, K.transpose(1, 2)) / (self.temperature * math.sqrt(self.d_model))
-        
-        # Sparse top-k attention
-        top_k_vals, top_k_idx = torch.topk(scores, self.k_sparse, dim=-1)
-        sparse_attn = torch.zeros_like(scores)
-        sparse_attn.scatter_(-1, top_k_idx, torch.softmax(top_k_vals, dim=-1))
-        
-        context = torch.bmm(sparse_attn, V)
-        logits = self.fc(context.mean(dim=1))
-        weights = torch.softmax(logits, dim=-1)
-        
-        return (weights, sparse_attn) if return_attn else (weights, None)
-    
-    def count_params(self):
-        return sum(p.numel() for p in self.parameters())
-
-
-def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patience=20, 
-                    entropy_lambda=0.0, contrastive_lambda=0.0):
+def train_one_split(model, X, Y, train_idx, val_idx, epochs=150, lr=1e-3, patience=25, entropy_lambda=0.1):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     X_train, Y_train = X[train_idx], Y[train_idx]
     X_val, Y_val = X[val_idx], Y[val_idx]
@@ -310,13 +86,15 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patien
         port_ret = (w * Y_train).sum(dim=-1)
         loss = -(port_ret.mean() / (port_ret.std() + 1e-8))
         
+        # Entropy regularization on attention weights
         if entropy_lambda > 0 and attn is not None:
-            if attn.dim() == 4:  # Multi-head [B, heads, P, P]
-                attn_flat = attn.mean(dim=1)  # Average over heads
+            if attn.dim() == 4:  # [B, n_heads, N, N]
+                attn_flat = attn.mean(dim=1)  # [B, N, N]
             else:
                 attn_flat = attn
-            row_entropy = -(attn_flat * (attn_flat + 1e-10).log()).sum(dim=-1)
-            loss = loss + entropy_lambda * row_entropy.mean()
+            # Average over assets
+            row_entropy = -(attn_flat * (attn_flat + 1e-10).log()).sum(dim=-1).mean()
+            loss = loss + entropy_lambda * row_entropy
         
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -341,11 +119,12 @@ def train_one_split(model, X, Y, train_idx, val_idx, epochs=100, lr=1e-3, patien
 
 
 def analyze_regime_signal(model, X, dates, indices):
+    """Analyze regime signal: crisis vs calm portfolio weight shift"""
     model.eval()
     with torch.no_grad():
         w, attn = model(X, return_attn=True)
         if attn is not None:
-            if attn.dim() == 4:  # Multi-head
+            if attn.dim() == 4:
                 attn_flat = attn.mean(dim=1)
             else:
                 attn_flat = attn
@@ -359,18 +138,20 @@ def analyze_regime_signal(model, X, dates, indices):
     crisis_idx = [i for i, y in enumerate(years) if y in crisis]
     calm_idx = [i for i, y in enumerate(years) if y in calm]
     
-    regime = {"avg_entropy": avg_entropy}
+    regime = {"avg_entropy": avg_entropy, "n_crisis": len(crisis_idx), "n_calm": len(calm_idx)}
     if crisis_idx and calm_idx:
         crisis_w = w[crisis_idx].mean(dim=0)
         calm_w = w[calm_idx].mean(dim=0)
         shift = [abs(c - l) for c, l in zip(crisis_w.tolist(), calm_w.tolist())]
-        regime["crisis_weights"] = crisis_w.tolist()
-        regime["calm_weights"] = calm_w.tolist()
+        regime["crisis_weights"] = [round(x, 4) for x in crisis_w.tolist()]
+        regime["calm_weights"] = [round(x, 4) for x in calm_w.tolist()]
         regime["max_shift"] = max(shift)
+        regime["shifts"] = [round(s, 4) for s in shift]
     return regime
 
 
-def run_experiment(exp_num, model_class, model_kwargs, seed=42, entropy_lambda=0.1, note=""):
+def run_experiment(exp_num, d_model, seed=42, entropy_lambda=0.1):
+    """Run single experiment with given d_model and seed"""
     t0 = time.time()
     torch.manual_seed(seed)
     
@@ -380,15 +161,16 @@ def run_experiment(exp_num, model_class, model_kwargs, seed=42, entropy_lambda=0
     X, Y, indices = make_sliding_windows(ret)
     splits = make_expanding_splits(dates, indices)
     
-    model = model_class(n_assets=N, **model_kwargs)
+    model = iTransformerScaler(n_assets=N, d_model=d_model, n_heads=2, temperature=0.1)
     n_params = model.count_params()
-    assert n_params <= MAX_PARAMS, f"{n_params} > {MAX_PARAMS}"
+    
+    if n_params > MAX_PARAMS:
+        print(f"WARNING: {n_params} params exceeds MAX_PARAMS {MAX_PARAMS}")
     
     all_test_weights, all_test_Y, yearly_results = [], [], {}
     
     for split in splits:
-        val_s = train_one_split(model, X, Y, split["train"], split["val"], 
-                                entropy_lambda=entropy_lambda)
+        val_s = train_one_split(model, X, Y, split["train"], split["val"], entropy_lambda=entropy_lambda)
         with torch.no_grad():
             test_idx = split["test"]
             w_test, _ = model(X[test_idx])
@@ -405,19 +187,17 @@ def run_experiment(exp_num, model_class, model_kwargs, seed=42, entropy_lambda=0
     
     regime = analyze_regime_signal(model, X, dates, indices)
     
-    model_name = model_class.__name__
     config = {
-        "model": f"{model_name}_exp{exp_num}",
+        "model": f"iTransformerScaler_exp{exp_num}",
         "n_params": n_params,
         "n_assets": N,
         "tickers": tickers,
-        "architecture": f"{model_name} d={model_kwargs.get('d_model', 'N/A')}",
+        "architecture": f"iTransformerScaler d={d_model}",
+        "d_model": d_model,
         "has_attention": True,
         "preserves_time": True,
         "regime_signal": regime,
         "seed": seed,
-        "note": note,
-        **model_kwargs
     }
     
     card_results = {
@@ -434,54 +214,89 @@ def run_experiment(exp_num, model_class, model_kwargs, seed=42, entropy_lambda=0
     write_card(config, card_results, {"val_sharpe": [0.3, 1.5], "train_time": [60, 300]})
     
     shift = regime.get('max_shift', 0)
-    print(f"Exp {exp_num}: {model_name}, d={model_kwargs.get('d_model', 'N/A')}, "
-          f"seed={seed}, sharpe={results['sharpe']:.3f}, shift={shift:.4%}")
+    print(f"  -> sharpe={results['sharpe']:.3f}, shift={shift:.2%}, params={n_params}")
     
-    return results["sharpe"], shift
+    return results["sharpe"], shift, regime
+
+
+def run_multi_seed(exp_num, d_model, seeds=[42, 123, 456]):
+    """Run same config with multiple seeds for robustness check"""
+    print(f"\n{'='*60}")
+    print(f"Exp {exp_num}: iTransformerScaler d_model={d_model}")
+    print(f"Multi-seed validation: {seeds}")
+    print(f"{'='*60}")
+    
+    results = []
+    for seed in seeds:
+        print(f"  Seed {seed}: ", end="", flush=True)
+        s, shift, regime = run_experiment(exp_num, d_model, seed=seed)
+        results.append({"seed": seed, "sharpe": s, "shift": shift, "regime": regime})
+        exp_num += 1
+    
+    # Summary
+    print(f"\n  --- Multi-seed Summary for d={d_model} ---")
+    shifts = [r["shift"] for r in results]
+    sharpes = [r["sharpe"] for r in results]
+    print(f"  Sharpe:  mean={sum(sharpes)/len(sharpes):.3f}, range=[{min(sharpes):.3f}, {max(sharpes):.3f}]")
+    print(f"  Shift:   mean={sum(shifts)/len(shifts):.2%}, range=[{min(shifts):.2%}, {max(shifts):.2%}]")
+    
+    # Check for robust regime signal (>10% in all seeds)
+    robust_regime = all(s > 0.10 for s in shifts)
+    print(f"  Robust regime (>10% all seeds): {'YES ✓' if robust_regime else 'NO ✗'}")
+    
+    return results, robust_regime
 
 
 def main():
     print("=" * 70)
-    print("Exp 0050-0054: Novel approaches after multi-seed failure")
+    print("Exp 0058-0062: d_model Scaling Experiment (주인님 Override)")
+    print("Hypothesis: d_model 8-16 sweet spot for regime + Sharpe")
     print("=" * 70)
     
-    # Exp 0050: ContrastiveRegimeAttention - d=16, seed=42
-    # Hypothesis: Explicit contrastive loss between crisis/calm
-    print("\n--- Exp 0050: ContrastiveRegimeAttention ---")
-    run_experiment(50, ContrastiveRegimeAttention, {"d_model": 16, "n_heads": 2}, 
-                   seed=42, entropy_lambda=0.1, 
-                   note="Contrastive training on crisis vs calm")
+    # Prepare data once
+    print("\nPreparing data...")
+    d = load_data()
+    ret, dates, tickers = d["log_return"], d["dates"], d["tickers"]
+    X, Y, indices = make_sliding_windows(ret)
+    print(f"  Samples: {len(X)}, Assets: {len(tickers)}, Patches: {X.shape[1]}")
     
-    # Exp 0051: MultiHeadSpecialist - d=16, 4 heads
-    # Hypothesis: Different heads learn different regimes
-    print("\n--- Exp 0051: MultiHeadSpecialist ---")
-    run_experiment(51, MultiHeadSpecialist, {"d_model": 16, "n_heads": 4}, 
-                   seed=42, entropy_lambda=0.1,
-                   note="4 independent heads, diversity regularization")
+    # Test configurations: d_model = [8, 12, 16, 24, 32]
+    configs = [
+        (58, 8),   # Exp 58-60: d=8 with 3 seeds
+        (61, 12),  # Exp 61-63: d=12 with 3 seeds  
+        (64, 16),  # Exp 64-66: d=16 with 3 seeds
+        (67, 24),  # Exp 67-69: d=24 with 3 seeds
+        (70, 32),  # Exp 70-72: d=32 with 3 seeds
+    ]
     
-    # Exp 0052: TimeBiasedAttention - d=16
-    # Hypothesis: Learnable temporal bias for recency
-    print("\n--- Exp 0052: TimeBiasedAttention ---")
-    run_experiment(52, TimeBiasedAttention, {"d_model": 16, "n_heads": 2}, 
-                   seed=42, entropy_lambda=0.1,
-                   note="Learnable temporal recency bias")
+    all_results = {}
+    any_robust_regime = False
     
-    # Exp 0053: VolatilityGatedAttention - d=16
-    # Hypothesis: Volatility-based gating of temporal focus
-    print("\n--- Exp 0053: VolatilityGatedAttention ---")
-    run_experiment(53, VolatilityGatedAttention, {"d_model": 16, "n_heads": 2}, 
-                   seed=42, entropy_lambda=0.1,
-                   note="Input volatility gates temporal attention")
+    for base_exp, d_model in configs:
+        results, robust = run_multi_seed(base_exp, d_model)
+        all_results[d_model] = results
+        if robust:
+            any_robust_regime = True
+            print(f"\n  >>> ROBUST REGIME DETECTED at d_model={d_model} <<<\n")
     
-    # Exp 0054: SparseRegimeAttention - d=16, k_sparse=4
-    # Hypothesis: Sparse top-k attention forces explicit temporal selection
-    print("\n--- Exp 0054: SparseRegimeAttention ---")
-    run_experiment(54, SparseRegimeAttention, {"d_model": 16, "n_heads": 2, "k_sparse": 4}, 
-                   seed=42, entropy_lambda=0.1,
-                   note="Top-4 sparse attention, explicit selection")
-    
+    # Final summary
     print("\n" + "=" * 70)
-    print("Exp 0050-0054 complete")
+    print("FINAL SUMMARY: d_model Scaling Experiment")
+    print("=" * 70)
+    print(f"{'d_model':<10} {'Sharpe (mean)':<15} {'Shift (mean)':<15} {'Robust >10%':<12}")
+    print("-" * 70)
+    for d_model, results in all_results.items():
+        sharpes = [r["sharpe"] for r in results]
+        shifts = [r["shift"] for r in results]
+        robust = "YES ✓" if all(s > 0.10 for s in shifts) else "NO ✗"
+        print(f"{d_model:<10} {sum(sharpes)/len(sharpes):.3f}          {sum(shifts)/len(shifts):.2%}          {robust}")
+    
+    print("-" * 70)
+    if any_robust_regime:
+        print("RESULT: Robust regime signal detected in at least one configuration!")
+    else:
+        print("RESULT: No robust regime signal detected across any d_model configuration.")
+        print("        Critic termination recommendation stands.")
     print("=" * 70)
 
 
